@@ -32,3 +32,20 @@ def transform_features(X, n):
                 
     return tresholds, X_new
 
+
+def get_first_entries(X, y, n, loss, base):
+    base_prediction = np.ones_like(y) * base
+    t, x = transform_features(np.array(X), n)
+    g, h = loss(y, base_prediction)
+    entries = []
+    for x_, y_, g_, h_ in zip(x, y, g, h):
+        entries.append(OptEntry(x_, y_, g_, h_, base))
+    return entries, t
+
+class OptEntry:
+    def __init__(self, x, y, g, h, prediction=0):
+        self.y = y
+        self.x = x
+        self.g = g
+        self.h = h
+        self.prediction = prediction

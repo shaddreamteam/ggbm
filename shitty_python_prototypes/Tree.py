@@ -35,9 +35,9 @@ class Leaf:
         self.path = path
         self.weight = weight
         self.final = False
-        self.left, self.right = Subleaf(), Subleaf()
             
     def get_split_weigths_gain(self, feature, bin_number, lambda_val):
+        self.left, self.right = Subleaf(), Subleaf()
         for entry in self.entries:
             if entry.x[feature] <= bin_number:
                 self.left.add(entry.g, entry.h)
@@ -54,23 +54,29 @@ class Leaf:
         self.saved_bin = bin_num
         
     def get_new_leafs(self):
+        left_path = [x for x in self.path]
+        left_path.append(0)
         left_entries = [e for e in self.entries if e.x[self.saved_feature] <= 
                         self.saved_bin]
-        left_leaf = Leaf(left_entries, self.saved_left_weight, 
-                         [x for x in self.path].append(0))
+        left_leaf = Leaf(left_entries, self.saved_left_weight, left_path)
         
+        right_path = [x for x in self.path]
+        right_path.append(1)
         right_entries = [e for e in self.entries if e.x[self.saved_feature] > 
                         self.saved_bin]
-        right_leaf = Leaf(right_entries, self.saved_right_weight,
-                          [x for x in self.path].append(1))
+        right_leaf = Leaf(right_entries, self.saved_right_weight, right_path)
         return left_leaf, right_leaf
 
 class Tree():
     def __init__(self, depth, loss, entries, tresholds, lambda_val, min_leaf_count, gamma):
         self.depth = depth
-        self.splits = []
+        self.loss = loss
         self.leafs = [Leaf(entries, 0, [])]
         self.tresholds = tresholds
+        self.lambda_val = lambda_val
+        self.min_leaf_count = min_leaf_count
+        self.gamma = gamma
+        self.splits = []
         self.path_leaf_dict = dict()
         
     
@@ -82,8 +88,8 @@ class Tree():
         while depth_counter < self.depth and not no_gain_flag:
             previous_gain = best_gain
             best_gain = 0
-            for feature in len(self.tresholds):
-                for bin_num in len(self.tresholds[feature_num]):
+            for feature in range(len(self.tresholds)):
+                for bin_num in range(len(self.tresholds[feature])):
                     if (feature, bin_num) not in self.splits and\
                        (feature, bin_num) not in too_small_splits:
                         bin_gain = 0
@@ -93,11 +99,12 @@ class Tree():
                             if min_split_count < self.min_leaf_count:
                                 too_small_splits.add((feature, bin_num))
                                 break
+                            bin_gain += leaf_gain
                         if bin_gain < best_gain and (min_split_count >= self.min_leaf_count):
                             best_gain = bin_gain
                             best_split = (feature, bin_num)
                             for leaf in self.leafs:
-                                leaf.remember_split()
+                                leaf.remember_split(feature, bin_num)
             if best_gain + self.gamma >= previous_gain:
                 no_gain_flag = True
                 break
@@ -112,9 +119,10 @@ class Tree():
                 depth_counter += 1
                 
         for leaf in self.leafs:
-            self.path_leaf_dict[leaf.path] = leaf        
-    def predict(entry):
+            self.path_leaf_dict[str(leaf.path)] = leaf
+
+    def predict(self, entry):
         path = []
         for split in self.splits:
-            path.append(entry.x[split[0]] > split[1])
-        return self.path_leaf_dict[path].weight
+            path.append(int(entry.x[split[0]] > split[1]))
+        return self.path_leaf_dict[str(path)].weight
