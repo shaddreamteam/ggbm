@@ -77,13 +77,13 @@ class Leaf:
         return new_leafs
 
 class Tree():
-    def __init__(self, depth, loss, entries, tresholds, lambda_val, min_leaf_count, gamma):
+    def __init__(self, depth, loss, entries, n_features, n_bins, lambda_val, gamma):
         self.depth = depth
+        self.n_features = n_features
+        self.n_bins = n_bins
         self.loss = loss
         self.leafs = [Leaf(entries, 0, [])]
-        self.tresholds = tresholds
         self.lambda_val = lambda_val
-        self.min_leaf_count = min_leaf_count
         self.gamma = gamma
         self.splits = []
         self.path_leaf_dict = dict()
@@ -96,8 +96,8 @@ class Tree():
         while depth_counter < self.depth and not no_gain_flag:
             previous_gain = best_gain
             best_gain = 0
-            for feature in range(len(self.tresholds)):
-                for bin_num in range(len(self.tresholds[feature])):
+            for feature in range(self.n_features):
+                for bin_num in range(self.n_bins):
                     if (feature, bin_num) not in self.splits:
                         bin_gain = 0
                         for leaf in self.leafs:
@@ -118,12 +118,16 @@ class Tree():
                         new_leafs.append(new_leaf)
                 self.leafs = new_leafs
                 depth_counter += 1
-                
+
+        self.real_depth = depth_counter
         for leaf in self.leafs:
             self.path_leaf_dict[str(leaf.path)] = leaf
 
-    def predict(self, entry):
+    def predict(self, x):
         path = []
         for split in self.splits:
-            path.append(int(entry.x[split[0]] > split[1]))
-        return self.path_leaf_dict[str(path)].weight
+            path.append(int(x[split[0]] > split[1]))
+        if str(path) in self.path_leaf_dict:
+            return self.path_leaf_dict[str(path)].weight
+        else:
+            return 0
