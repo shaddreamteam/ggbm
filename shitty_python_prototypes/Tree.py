@@ -19,7 +19,7 @@ class Subleaf:
         else:
             self.weight = -self.G / (self.H + self.count * lambda_val)
             self.gain = -self.G ** 2 / (self.H + self.count * lambda_val) / 2
-        return self.gain, self.count
+        return self.gain
 
     def copy(self):
         copy = Subleaf()
@@ -43,29 +43,38 @@ class Leaf:
                 self.left.add(entry.g, entry.h)
             else:
                 self.right.add(entry.g, entry.h)
-        gain_left, count_left = self.left.summarise(lambda_val)
-        gain_right, count_right = self.right.summarise(lambda_val)
-        return gain_left + gain_right, min(count_left, count_right)
+        gain = 0
+        gain += self.left.summarise(lambda_val)
+        gain += self.right.summarise(lambda_val)
+        return gain
 
     def remember_split(self, feature, bin_num):
         self.saved_left_weight = self.left.weight
         self.saved_right_weight = self.right.weight
         self.saved_feature = feature
         self.saved_bin = bin_num
+        self.saved_left_count = self.left.count
+        self.saved_right_count = self.right.count
         
     def get_new_leafs(self):
-        left_path = [x for x in self.path]
-        left_path.append(0)
-        left_entries = [e for e in self.entries if e.x[self.saved_feature] <= 
-                        self.saved_bin]
-        left_leaf = Leaf(left_entries, self.saved_left_weight, left_path)
+        if self.saved_left_weight == 0 and self.saved_right_weight == 0:
+            return [self]
         
-        right_path = [x for x in self.path]
-        right_path.append(1)
-        right_entries = [e for e in self.entries if e.x[self.saved_feature] > 
-                        self.saved_bin]
-        right_leaf = Leaf(right_entries, self.saved_right_weight, right_path)
-        return left_leaf, right_leaf
+        new_leafs = []
+        if self.saved_left_weight != 0:
+            left_path = [x for x in self.path]
+            left_path.append(0)
+            left_entries = [e for e in self.entries if e.x[self.saved_feature] <= 
+                            self.saved_bin]
+            new_leafs.append(Leaf(left_entries, self.saved_left_weight, left_path))
+            
+        if self.saved_right_count != 0:
+            right_path = [x for x in self.path]
+            right_path.append(1)
+            right_entries = [e for e in self.entries if e.x[self.saved_feature] > 
+                            self.saved_bin]
+            new_leafs.append(Leaf(right_entries, self.saved_right_weight, right_path))
+        return new_leafs
 
 class Tree():
     def __init__(self, depth, loss, entries, tresholds, lambda_val, min_leaf_count, gamma):
@@ -84,23 +93,16 @@ class Tree():
         depth_counter = 0
         no_gain_flag = False
         best_gain = 0
-        too_small_splits = set()
         while depth_counter < self.depth and not no_gain_flag:
             previous_gain = best_gain
             best_gain = 0
             for feature in range(len(self.tresholds)):
                 for bin_num in range(len(self.tresholds[feature])):
-                    if (feature, bin_num) not in self.splits and\
-                       (feature, bin_num) not in too_small_splits:
+                    if (feature, bin_num) not in self.splits:
                         bin_gain = 0
                         for leaf in self.leafs:
-                            leaf_gain, min_split_count = \
-                                leaf.get_split_weigths_gain(feature, bin_num, self.lambda_val)
-                            if min_split_count < self.min_leaf_count:
-                                too_small_splits.add((feature, bin_num))
-                                break
-                            bin_gain += leaf_gain
-                        if bin_gain < best_gain and (min_split_count >= self.min_leaf_count):
+                            bin_gain += leaf.get_split_weigths_gain(feature, bin_num, self.lambda_val)
+                        if bin_gain < best_gain:
                             best_gain = bin_gain
                             best_split = (feature, bin_num)
                             for leaf in self.leafs:
@@ -112,9 +114,8 @@ class Tree():
                 self.splits.append(best_split)
                 new_leafs = []
                 for leaf in self.leafs:
-                    left, right = leaf.get_new_leafs()
-                    new_leafs.append(left)
-                    new_leafs.append(right)
+                    for new_leaf in leaf.get_new_leafs():
+                        new_leafs.append(new_leaf)
                 self.leafs = new_leafs
                 depth_counter += 1
                 
