@@ -2,7 +2,7 @@ import numpy as np
 
 class FeatureTransformer:
     def __init__(self, n_bins):
-        self.n = n_bins / 2
+        self.n = n_bins // 2
         
     def get_percentile_threshold(self, feature):
         perc_q = np.arange(0, 100, 100.0 / (self.n + 1))[1:]

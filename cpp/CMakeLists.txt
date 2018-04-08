@@ -3,5 +3,5 @@ project(cpp)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp src/Leaf.cpp src/Leaf.h src/Dataset.cpp src/Dataset.h src/Base.h src/FeatureTransformer.cpp src/FeatureTransformer.h src/dataset_stub.h)
 add_executable(cpp ${SOURCE_FILES})
