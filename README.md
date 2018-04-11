@@ -1,5 +1,5 @@
 # ggbm
-Dream team gradient boosting realization
+Good game boosting machine
 
 Планируется написать утилиту для реализации градиентного бустинга на c++. Запуск будет осуществляться в консоли с передачей параметров в command line:
 * режим (обучение, применение)
