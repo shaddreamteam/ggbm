@@ -21,7 +21,8 @@ private:
 class Dataset {
 public:
     Dataset(const std::string& filename, uint32_t thread_count);
-
+    GetFeature(uint32_t feature_number, uint32_t row_number);
+    GetTarget(uint32_t row_number);
 
 private:
     std::vector<float_type> targets_;
