@@ -16,12 +16,10 @@ class Leaf {
 
 class Histogram {
 public:
-    void Histogram(uint32_t n_bins, float_type lambda_l2_reg) : 
+    Histogram(uint32_t n_bins, float_type lambda_l2_reg) : 
                                         gradient_(n_bins, 0.0),
                                         hessian_(n_bins, 0.0),
-                                        gain_(n_bins, 0.0),
                                         lambda_l2_reg_(lambda_l2_reg),
-                                        weight_(0.0),
                                         row_count_(n_bins, 0),
                                         finalized(false),
                                         n_bins(n_bins) {};
@@ -40,5 +38,5 @@ private:
     uint32_t n_bins;
 
     void MakeCumsum();
-}
+};
 #endif //CPP_LEAF_H

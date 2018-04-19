@@ -23,11 +23,17 @@ std::tuple<std::vector<float_type>, std::vector<float_type>> Histogram::Calculat
     }
     std::vector<float_type> gain(n_bins, 0);
     std::vector<float_type> weight(n_bins, 0);
-    for(i = 0; i < n_bins; ++i) {
-        weight[i] = -gradient_[i] / (hessian_[i] + row_count_[i] * lambda_l2_reg);
-        gain[i] = -pow(gradient_[i], 2.0) / 2.0 / (hessian_[i] + row_count_[i] * lambda_l2_reg);
+    for(uint32_t i = 0; i < n_bins; ++i) {
+        double denominator = (hessian_[i] + row_count_[i] * lambda_l2_reg_);
+        if(denominator == 0) {
+            weight[i] = 0;
+            gain[i] = 0;
+        } else {
+            weight[i] = -gradient_[i] / denominator;
+            gain[i] = -pow(gradient_[i], 2.0) / (2.0 * denominator);
+        }
     }
-    return std::maketuple(gain, weight);
+    return std::make_tuple(gain, weight);
 }
 
 //float_type SubLeaf::CalculateGain() {
