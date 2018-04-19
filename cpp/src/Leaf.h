@@ -6,37 +6,42 @@
 #include <cstdint>
 #include "Base.h"
 #include "GGBM.h"
-
-class Leaf {
-    Leaf();
-
-
-
-};
+#include "Dataset.h"
 
 class Histogram {
 public:
-    Histogram(uint32_t n_bins, float_type lambda_l2_reg) : 
-                                        gradient_(n_bins, 0.0),
-                                        hessian_(n_bins, 0.0),
-                                        lambda_l2_reg_(lambda_l2_reg),
-                                        row_count_(n_bins, 0),
-                                        finalized(false),
-                                        n_bins(n_bins) {};
+    Histogram(std::vector<float_type> gradient_cs, std::vector<float_type> hessian_cs,
+              std::vector<uint32_t> row_count_cs, float_type lambda_l2_reg) :
+        gradient_cs_(gradient_cs),
+        hessian_cs_(hessian_cs),
+        row_count_cs_(row_count_cs),
+        lambda_l2_reg_(lambda_l2_reg) {};
 
-    void AddGrad(bin_id bin_number, float_type row_gradient, 
-                 float_type row_hessian);
-
-    std::tuple<std::vector<float_type>, std::vector<float_type>> CalculateGain();
+    std::tuple<float_type, float_type> CalculateGains(bin_id bin_number) const;
+    std::tuple<float_type, float_type> CalculateWeights(bin_id bin_number) const;
 
 private:
-    std::vector<float_type> gradient_;
-    std::vector<float_type> hessian_;
+    std::vector<float_type> gradient_cs_;
+    std::vector<float_type> hessian_cs_;
+    std::vector<uint32_t> row_count_cs_;
     float_type lambda_l2_reg_;
-    std::vector<uint32_t> row_count_;
-    bool finalized;
-    uint32_t n_bins;
 
-    void MakeCumsum();
+    float_type CalculateGain(float_type gradient, float_type hessian, 
+                                         uint32_t row_count) const;
+    float_type CalculateWeight(float_type gradient, float_type hessian, 
+                                          uint32_t row_count) const;
+};
+
+class Leaf {
+public:
+    Leaf(std::vector<uint32_t> indexes, const Dataset& dataset, OptData& optData):
+        indexes(indexes), dataset(dataset), optData(optData) {};
+
+    Histogram GetWeightsGains(uint32_t feature_number);
+private:
+    float_type lambda_l2_reg_;
+    std::vector<uint32_t> indexes;
+    const Dataset& dataset;
+    const OptData& optData;
 };
 #endif //CPP_LEAF_H

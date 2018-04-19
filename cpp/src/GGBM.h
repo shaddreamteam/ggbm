@@ -6,9 +6,9 @@
 #include "Base.h"
 class OptData {
 public:
-    float_type GetGradient(uint32_t row_number);    
-    float_type GetHessian(uint32_t row_number);    
-    float_type GetPrediction(uint32_t row_number);    
+    float_type GetGradient(uint32_t row_number) const;
+    float_type GetHessian(uint32_t row_number) const;    
+    float_type GetPrediction(uint32_t row_number) const;    
     void SetPrediction(uint32_t row_number, float_type prediction);
     OptData(std::vector<float_type> gradients, std::vector<float_type> hessians,
             std::vector<float_type> predictions): 

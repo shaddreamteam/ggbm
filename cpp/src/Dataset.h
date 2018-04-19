@@ -8,21 +8,24 @@
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
 
-class Row {
-public:
-
-private:
-    float_type target_;
-    float_type gradient_;
-    float_type hessian_;
-};
+//class Row {
+//public:
+//
+//private:
+//    float_type target_;
+//    float_type gradient_;
+//    float_type hessian_;
+//};
 
 
 class Dataset {
 public:
     Dataset(const std::string& filename, uint32_t thread_count);
-    GetFeature(uint32_t feature_number, uint32_t row_number);
-    GetTarget(uint32_t row_number);
+    bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
+    float_type GetTarget(uint32_t row_number) const;
+    uint32_t GetBinCount(uint32_t feature_number) const {
+        return ft_.GetBinCount(feature_number);
+    }
 
 private:
     std::vector<float_type> targets_;

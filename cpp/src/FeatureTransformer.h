@@ -15,7 +15,8 @@ public:
 
     std::vector<std::vector<bin_id>>
     Transform(const std::vector<std::vector<float_type>>& feature_values);
-
+    
+    uint32_t GetBinCount(uint32_t feature_number) const;
 private:
     std::vector<float_type> GreedyFindBin(const std::vector<float_type>& distinct_values,
                                           const std::vector<uint32_t>& counts,

@@ -121,3 +121,7 @@ FeatureTransformer::GreedyFindBin(const std::vector<float_type>& distinct_values
     }
     return bin_upper_bound;
 }
+
+uint32_t FeatureTransformer::GetBinCount(uint32_t feature_number) const {
+    return bin_upper_bounds_.at(feature_number).size();
+}
