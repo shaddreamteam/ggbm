@@ -37,9 +37,8 @@ public:
     Leaf(std::vector<uint32_t> indexes, const Dataset& dataset, OptData& optData):
         indexes(indexes), dataset(dataset), optData(optData) {};
 
-    Histogram GetWeightsGains(uint32_t feature_number);
+    Histogram GetHistogram(uint32_t feature_number, float_type lambda_l2_reg);
 private:
-    float_type lambda_l2_reg_;
     std::vector<uint32_t> indexes;
     const Dataset& dataset;
     const OptData& optData;

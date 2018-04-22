@@ -8,6 +8,9 @@
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
 
+#ifdef DEBUG
+#include <cmath>
+#endif //DEBUG
 //class Row {
 //public:
 //
@@ -21,11 +24,14 @@
 class Dataset {
 public:
     Dataset(const std::string& filename, uint32_t thread_count);
+#ifdef DEBUG
+    Dataset(std::vector<std::vector<bin_id>> feature_bin_ids) :
+        feature_bin_ids_(feature_bin_ids),
+        ft_(0) {}
+#endif //DEBUG
     bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
     float_type GetTarget(uint32_t row_number) const;
-    uint32_t GetBinCount(uint32_t feature_number) const {
-        return ft_.GetBinCount(feature_number);
-    }
+    uint32_t GetBinCount(uint32_t feature_number) const;
 
 private:
     std::vector<float_type> targets_;

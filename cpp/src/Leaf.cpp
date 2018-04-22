@@ -17,7 +17,7 @@ float_type Histogram::CalculateWeight(float_type gradient, float_type hessian,
     float_type denominator = (hessian + row_count * lambda_l2_reg_);
     float_type weight = 0;
     if(denominator != 0) {
-        weight = -pow(gradient, 2.0) / (2.0 * denominator);
+        weight = -gradient / denominator;
     }
     return weight;
 }
@@ -40,7 +40,7 @@ std::tuple<float_type, float_type> Histogram::CalculateWeights(bin_id bin_number
     return std::make_tuple(weght_left, weight_right);
 }
 
-Histogram Leaf::GetWeightsGains(uint32_t feature_number) {
+Histogram Leaf::GetHistogram(uint32_t feature_number, float_type lambda_l2_reg) {
     std::vector<float_type> gradients(dataset.GetBinCount(feature_number), 0);
     std::vector<float_type> hessians(dataset.GetBinCount(feature_number), 0);
     std::vector<uint32_t> row_counts(dataset.GetBinCount(feature_number), 0);
@@ -55,5 +55,5 @@ Histogram Leaf::GetWeightsGains(uint32_t feature_number) {
         hessians[i] += hessians[i - 1];
         row_counts[i] += row_counts[i - 1];
     }
-    return Histogram(gradients, hessians, row_counts, lambda_l2_reg_);
+    return Histogram(gradients, hessians, row_counts, lambda_l2_reg);
 }

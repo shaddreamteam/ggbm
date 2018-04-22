@@ -1,4 +1,5 @@
 #include "Dataset.h"
+#include <algorithm>
 
 Dataset::Dataset(const std::string& filename, uint32_t thread_count) :
         ft_(FeatureTransformer(thread_count)) {
@@ -12,4 +13,11 @@ bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
 
 float_type Dataset::GetTarget(uint32_t row_number) const {
     return targets_[row_number];
+}
+
+uint32_t Dataset::GetBinCount(uint32_t feature_number) const {
+#ifdef DEBUG
+    return 4;
+#endif
+    return ft_.GetBinCount(feature_number);
 }
