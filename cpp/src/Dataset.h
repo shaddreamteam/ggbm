@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <istream>
+#include <fstream>
 #include "Base.h"
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
