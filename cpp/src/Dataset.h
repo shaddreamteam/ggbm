@@ -24,9 +24,14 @@ public:
 
 
 private:
+    void GetSampleAndTargetFromFile(std::string filename, char sep,
+                                    std::vector<std::vector<float_type>>* feature_values,
+                                    std::vector<float_type>* targets);
+
     std::vector<float_type> targets_;
     std::vector<std::vector<bin_id>> feature_bin_ids_;
     FeatureTransformer ft_;
+
 };
 
 class CSVReader {
