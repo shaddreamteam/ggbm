@@ -1,5 +1,6 @@
-#include "Dataset.h"
 #include <algorithm>
+#include <sstream>
+#include "Dataset.h"
 
 Dataset::Dataset(const std::string& filename, uint32_t thread_count) :
         ft_(FeatureTransformer(thread_count)) {
