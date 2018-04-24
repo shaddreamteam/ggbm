@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <istream>
+#include <fstream>
 #include "Base.h"
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
@@ -36,9 +37,14 @@ public:
     uint32_t GetNFeatures() const;
 
 private:
+    void GetSampleAndTargetFromFile(std::string filename, char sep,
+                                    std::vector<std::vector<float_type>>* feature_values,
+                                    std::vector<float_type>* targets);
+
     std::vector<float_type> targets_;
     std::vector<std::vector<bin_id>> feature_bin_ids_;
     FeatureTransformer ft_;
+
 };
 
 class CSVReader {
