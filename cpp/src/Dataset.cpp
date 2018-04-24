@@ -21,3 +21,7 @@ uint32_t Dataset::GetBinCount(uint32_t feature_number) const {
 #endif
     return ft_.GetBinCount(feature_number);
 }
+
+uint32_t Dataset::GetNRows() const {
+    return feature_bin_ids_.size();
+}

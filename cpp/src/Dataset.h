@@ -32,6 +32,8 @@ public:
     bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
     float_type GetTarget(uint32_t row_number) const;
     uint32_t GetBinCount(uint32_t feature_number) const;
+    uint32_t GetNRows() const;
+    uint32_t GetNFeatures() const;
 
 private:
     std::vector<float_type> targets_;

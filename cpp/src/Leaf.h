@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <cstdint>
+#include <memory>
 #include "Base.h"
 #include "GGBM.h"
 #include "Dataset.h"
@@ -17,8 +18,8 @@ public:
         row_count_cs_(row_count_cs),
         lambda_l2_reg_(lambda_l2_reg) {};
 
-    std::tuple<float_type, float_type> CalculateGains(bin_id bin_number) const;
-    std::tuple<float_type, float_type> CalculateWeights(bin_id bin_number) const;
+    float_type CalculateSplitGain(bin_id bin_number) const;
+    std::tuple<float_type, float_type> CalculateSplitWeights(bin_id bin_number) const;
 
 private:
     std::vector<float_type> gradient_cs_;
@@ -34,13 +35,22 @@ private:
 
 class Leaf {
 public:
-    Leaf(std::vector<uint32_t> indexes, const Dataset& dataset, OptData& optData):
-        indexes(indexes), dataset(dataset), optData(optData) {};
+    Leaf() {};
+    Leaf(uint32_t leaf_index, float_type weight, std::vector<uint32_t> row_indexes, std::shared_ptr<const Dataset> dataset, std::shared_ptr<const OptData> optData):
+        leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes), dataset_(dataset), optData_(optData) {};
 
-    Histogram GetHistogram(uint32_t feature_number, float_type lambda_l2_reg);
+    Histogram GetHistogram(uint32_t feature_number, float_type lambda_l2_reg) const;
+
+    std::tuple<Leaf, Leaf> MakeChilds(uint32_t feature, bin_id bin_number, float_type left_weight, float_type right_weight) const;
+ 
+    uint32_t GetIndex(uint32_t depth) const;
+    bool IsEmpty() const;
+    float_type GetWeight() const;
 private:
-    std::vector<uint32_t> indexes;
-    const Dataset& dataset;
-    const OptData& optData;
+    uint32_t leaf_index_;
+    float_type weight_;
+    std::vector<uint32_t> row_indexes_;
+    std::shared_ptr<const Dataset> dataset_;
+    std::shared_ptr<const OptData> optData_;
 };
 #endif //CPP_LEAF_H

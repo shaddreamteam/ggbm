@@ -10,7 +10,7 @@ public:
             std::vector<float_type> predictions): 
         gradients(gradients),
         hessians(hessians),
-        predictions(predictions) {}
+        predictions(predictions) {};
 
     float_type GetGradient(uint32_t row_number) const;
     float_type GetHessian(uint32_t row_number) const;    
