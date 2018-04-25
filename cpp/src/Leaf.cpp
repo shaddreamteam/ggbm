@@ -73,7 +73,7 @@ std::tuple<Leaf, Leaf> Leaf::MakeChilds(uint32_t feature_number, bin_id bin_numb
 }
 
 uint32_t Leaf::GetIndex(uint32_t depth) const {
-    return leaf_index_ - uint32_t(pow(2, depth - 1));
+    return leaf_index_ - uint32_t(pow(2, depth)) + 1;
 }
 
 bool Leaf::IsEmpty() const {

@@ -4,8 +4,17 @@
 
 Dataset::Dataset(const std::string& filename, uint32_t thread_count) :
         ft_(FeatureTransformer(thread_count)) {
-    targets_ = data_y;
+    std::vector<std::vector<float_type>> data_x;
+    GetSampleAndTargetFromFile(filename, ',', &data_x, &targets_);
+    for(auto t : targets_) 
+        std::cout << int(t) << "\t";
+        std::cout << "\n";
     feature_bin_ids_ = ft_.FitTransform(data_x);
+    for(auto v: feature_bin_ids_) {
+        for(auto f: v)
+            std::cout << int(f) << "\t";
+        std::cout << "\n";
+    }
 }
 
 bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
@@ -17,13 +26,14 @@ float_type Dataset::GetTarget(uint32_t row_number) const {
 }
 
 uint32_t Dataset::GetBinCount(uint32_t feature_number) const {
-#ifdef DEBUG
-    return 4;
-#endif
     return ft_.GetBinCount(feature_number);
 }
 
 uint32_t Dataset::GetNRows() const {
+    return targets_.size();
+}
+
+uint32_t Dataset::GetNFeatures() const{
     return feature_bin_ids_.size();
 }
 

@@ -6,8 +6,9 @@
 #include <iostream>
 
 typedef float float_type;
-typedef unsigned char bin_id;
+typedef uint8_t bin_id;
 
 const unsigned char kMaxBin = 255;
+const float_type EPS = 1e-5;
 
 #endif //CPP_BASE_H

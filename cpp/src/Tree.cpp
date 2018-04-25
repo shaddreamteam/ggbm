@@ -19,7 +19,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
         uint32_t size = leafs.size();
         std::vector<float_type> best_left_weigths(size), best_right_weigts(size);
         for(uint32_t feature_number = 0; feature_number < dataset->GetNFeatures(); ++feature_number) {
-            for(bin_id bin_number; bin_number < dataset->GetBinCount(feature_number); ++bin_number) {
+            for(bin_id bin_number = 0; bin_number < dataset->GetBinCount(feature_number); ++bin_number) {
                 float_type gain = 0;
                 std::vector<float_type> left_weigths(size), right_weigts(size);
                 std::vector<Histogram> histograms;
@@ -43,7 +43,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
             }
         }
 
-        if(best_gain < prev_gain) {
+        if(best_gain < prev_gain - EPS) {
             splits_.push_back(std::make_tuple(best_feature, best_bin));
             Leaf left, right;
             std::vector<Leaf> new_leafs;
@@ -65,9 +65,6 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
     
     if(depth > 0) {
         weights_ = std::vector<float_type>(uint32_t(pow(2, depth)), 0);
-        for(const Leaf& leaf : leafs) {
-            weights_[leaf.GetIndex(depth)] = leaf.GetWeight();
-        }
         initialized_ = true;
     }
 }
