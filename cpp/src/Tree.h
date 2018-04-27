@@ -1,3 +1,6 @@
+#ifndef CPP_TREE_H
+#define CPP_TREE_H
+
 #include <vector>
 #include <memory>
 #include <tuple>
@@ -20,3 +23,5 @@ private:
 
     std::tuple<float, std::vector<float_type>> GetSplitResult(uint32_t feature_number);
 };
+
+#endif //CPP_TREE_H
