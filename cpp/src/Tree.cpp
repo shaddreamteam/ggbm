@@ -4,6 +4,7 @@
 //#include <functional>
 #include <tuple>
 #include <vector>
+#include <numeric>
 #include "Tree.h"
 
 void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<const OptData> optData, float_type lambda_l2_reg) {
