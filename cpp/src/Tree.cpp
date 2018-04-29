@@ -70,12 +70,9 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
         initialized_ = true;
     }
 
-    std::cout << "leaf weights: ";
-    for(auto& leaf : leafs) {
-        std::cout << leaf.GetWeight() << ' ';
+    for(const auto& leaf : leafs) {
+        weights_[leaf.GetIndex(depth)] = leaf.GetWeight();
     }
-    std::cout << std::endl;
-
 }
 
 

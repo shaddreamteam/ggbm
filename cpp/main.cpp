@@ -38,10 +38,6 @@ int main() {
     //               << int(x_test_bins[1][i]) << ' '
     //               << preds[i] << std::endl;
     // }
-
-
-
-
     std::shared_ptr<const Dataset> dataset_p = std::make_shared<const Dataset>("train.csv", 1);
     float_type mean = 0;
     for(const float_type& target : dataset_p->targets_) {
@@ -54,26 +50,18 @@ int main() {
     for(uint32_t i = 0; i < dataset_p->GetNRows(); ++i) {
         gradients[i] = 2 * (predictions[i] - dataset_p->GetTarget(i)) / dataset_p->GetNRows();
     }
-    for(auto g : gradients) {
-        std::cout << g << "\t";
-    }
-    std::cout << "\n";
-
 
     std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(gradients,
             hessians, predictions);
     
-
     Tree tree(2);
     tree.Construct(dataset_p, optData_p, 0);
-
-
 
     auto preds = tree.PredictFromFile("test.csv", dataset_p);
 
     std::cout << "preds:" << std::endl;
     for(auto& pred : preds) {
-        std::cout << pred << ' ';
+        std::cout << mean + pred << ' ';
     }
     std::cout << std::endl;
 
