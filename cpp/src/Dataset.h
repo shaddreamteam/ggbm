@@ -25,10 +25,11 @@ protected:
     std::vector<std::vector<bin_id>> feature_bin_ids_;
  
     Dataset() {};
-    void GetDataFromFile(std::string filename, char sep,
+    void GetDataFromFile(std::string filename,
                          std::vector<std::vector<float_type>>& feature_values,
-                         std::vector<float_type>* targets,
-                         bool isTargetFirst) const;
+                         bool isTargetFirst,
+                         std::vector<float_type>* targets=nullptr,
+                         char sep='\0') const;
 };
 
 class TrainDataset : public Dataset {
