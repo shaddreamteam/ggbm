@@ -100,6 +100,6 @@ std::vector<float_type> Tree::PredictFromFile(const std::string& filename,
                                               std::shared_ptr<const Dataset> dataset,
                                               char sep) const {
     std::vector<std::vector<float_type>> data_x;
-    dataset->GetSampleAndTargetFromFile(filename, sep, &data_x); 
+    dataset->GetSampleFromFile(filename, &data_x, nullptr, sep);
     return PredictFromBins(dataset->Transform(data_x));
 }

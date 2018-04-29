@@ -43,13 +43,13 @@ public:
 
     std::vector<std::vector<float_type>> Test(const std::string& filename) {
         std::vector<std::vector<float_type>> res;
-        GetSampleAndTargetFromFile(filename, ',', &res);
+        GetSampleFromFile(filename, &res);
         return res;
     };
 
-    void GetSampleAndTargetFromFile(std::string filename, char sep,
-                                    std::vector<std::vector<float_type>>* feature_values,
-                                    std::vector<float_type>* targets=nullptr) const;
+    void GetSampleFromFile(std::string filename,
+                           std::vector<std::vector<float_type>>* feature_values,
+                           std::vector<float_type>* targets=nullptr, char sep='\0') const;
 
 private:
 

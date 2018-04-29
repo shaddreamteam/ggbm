@@ -5,7 +5,7 @@
 Dataset::Dataset(const std::string& filename, uint32_t thread_count) :
         ft_(FeatureTransformer(thread_count)) {
     std::vector<std::vector<float_type>> data_x;
-    GetSampleAndTargetFromFile(filename, ',', &data_x, &targets_);
+    GetSampleFromFile(filename, &data_x, &targets_);
     feature_bin_ids_ = ft_.FitTransform(data_x);
 }
 
@@ -34,17 +34,25 @@ std::vector<std::vector<bin_id>> Dataset::Transform(
     return ft_.Transform(feature_values);
 }
 
-void Dataset::GetSampleAndTargetFromFile(std::string filename, char sep,
-                                         std::vector<std::vector<float_type>>* feature_values,
-                                         std::vector<float_type>* targets) const{
-
+void Dataset::GetSampleFromFile(std::string filename,
+                                std::vector<std::vector<float_type>>* feature_values,
+                                std::vector<float_type>* targets, char sep) const{
     // read data from file and store it into feature_values and targets
-    // sep -- ',' or '\t'
     // feature_values -- vector of feature columns, n_features x n_samples
-    // targets -- vector of taget values, n_samples
+    // targets -- optional, vector of taget values, n_samples
+    // sep -- optional, ',' or '\t'
 
     std::ifstream file(filename);  
     std::string line;
+
+    if(sep=='\0') {
+        auto file_format = filename.substr(filename.size() - 3, 3);
+        if(file_format == "csv") {
+            sep = ',';
+        } else if(file_format == "tsv") {
+            sep = '\t';
+        }
+    }
 
     std::getline(file, line);
     size_t n = std::count(line.begin(), line.end(), sep);
