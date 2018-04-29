@@ -1,25 +1,25 @@
 #ifndef CPP_GGBM_H
 #define CPP_GGBM_H
 
+#include <memory>
 #include <vector>
 #include <string>
 #include "Base.h"
-class OptData {
-public:
-    OptData(std::vector<float_type> gradients, std::vector<float_type> hessians,
-            std::vector<float_type> predictions): 
-        gradients(gradients),
-        hessians(hessians),
-        predictions(predictions) {};
+#include "Loss.h"
+#include "OptData.h"
+#include "Tree.h"
 
-    float_type GetGradient(uint32_t row_number) const;
-    float_type GetHessian(uint32_t row_number) const;    
-    float_type GetPrediction(uint32_t row_number) const;    
-    void SetPrediction(uint32_t row_number, float_type prediction);
+
+class GGBM {
+public:
+    GGBM(): initialized_(false) {};
+    void Train(const std::shared_ptr<const TrainDataset> trainData, const Loss& loss, 
+            uint32_t depth, uint32_t n_estimators, float_type lambda_l2_reg, 
+            float_type learning_rate);
 
 private:
-    std::vector<float_type> gradients;
-    std::vector<float_type> hessians;
-    std::vector<float_type> predictions;
+    bool initialized_;
+    float_type learning_rate_;
+    std::vector<Tree> trees_;
 };
 #endif //CPP_GGBM_H

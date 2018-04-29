@@ -1,6 +1,6 @@
 #include <iostream>
 #include "src/Dataset.h"
-
+#include "src/Loss.h"
 #include "src/Tree.h"
 
 
@@ -38,34 +38,27 @@ int main() {
     //               << int(x_test_bins[1][i]) << ' '
     //               << preds[i] << std::endl;
     // }
-    std::shared_ptr<const Dataset> dataset_p = std::make_shared<const Dataset>("train.csv", 1);
-    float_type mean = 0;
-    for(const float_type& target : dataset_p->targets_) {
-        mean += target / dataset_p->GetNRows();
-    }
+    FeatureTransformer ft(1);
+    std::shared_ptr<const TrainDataset> dataset = 
+        std::make_shared<const TrainDataset>("train.csv", ft);
+    MSE loss;
 
-    std::vector<float_type> predictions(dataset_p->GetNRows(), mean);
-    std::vector<float_type> hessians(dataset_p->GetNRows(), 2.0 / dataset_p->GetNRows());
-    std::vector<float_type> gradients(dataset_p->GetNRows(), 0);
-    for(uint32_t i = 0; i < dataset_p->GetNRows(); ++i) {
-        gradients[i] = 2 * (predictions[i] - dataset_p->GetTarget(i)) / dataset_p->GetNRows();
-    }
+    float_type first_prediction = loss.GetFirstPrediction(*dataset);
+    std::vector<float_type> predictions(dataset->GetNRows(), first_prediction);
 
-    std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(gradients,
-            hessians, predictions);
+    std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(*dataset,
+            predictions, loss);
     
     Tree tree(2);
-    tree.Construct(dataset_p, optData_p, 0);
+    tree.Construct(dataset, optData_p, 0);
 
-    auto preds = tree.PredictFromFile("test.csv", dataset_p);
+    auto preds = tree.PredictFromFile("test.csv", ft, false);
 
     std::cout << "preds:" << std::endl;
     for(auto& pred : preds) {
-        std::cout << mean + pred << ' ';
+        std::cout << first_prediction + pred << ' ';
     }
     std::cout << std::endl;
-
-
 
     std::cout << "Hello, World!" << std::endl;
     return 0;

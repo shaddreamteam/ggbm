@@ -7,13 +7,15 @@
 #include <numeric>
 #include "Tree.h"
 
-void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<const OptData> optData, float_type lambda_l2_reg) {
+class OptData;
+void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
+                     std::shared_ptr<const OptData> optData,
+                     float_type lambda_l2_reg) {
     std::vector<uint32_t> indexes(dataset->GetNRows());
     std::iota(indexes.begin(), indexes.end(), 0);
     std::vector<Leaf> leafs = {Leaf(0, 0, indexes, dataset, optData)};;
     float_type best_gain = 0;
-    uint32_t depth;
-    for(depth = 0; depth < max_depth_; ++depth) {
+    for(depth_ = 0; depth_ < max_depth_; ++depth_) {
         float_type prev_gain = best_gain;
         uint32_t best_feature;
         bin_id best_bin;
@@ -59,31 +61,30 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
                 }
             }
             leafs = new_leafs;
-            ++depth_;
         } else {
             break;
         }
     }
     
-    if(depth > 0) {
-        weights_ = std::vector<float_type>(uint32_t(pow(2, depth)), 0);
+    if(depth_ > 0) {
+        weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
         initialized_ = true;
     }
 
     for(const auto& leaf : leafs) {
-        weights_[leaf.GetIndex(depth)] = leaf.GetWeight();
+        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
     }
 }
 
 
-std::vector<float_type> Tree::PredictFromBins(const std::vector<std::vector<bin_id>>& data_x_binned) const{
+std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     std::vector<float_type> predictions;
-    predictions.reserve(weights_.size());
+    predictions.reserve(dataset.GetNRows());
 
-    for(uint32_t object_index = 0; object_index < data_x_binned[0].size(); ++object_index) {
+    for(uint32_t object_index = 0; object_index < dataset.GetNRows(); ++object_index) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
-            if(data_x_binned[std::get<0>(split)][object_index] <= std::get<1>(split)) {
+            if(dataset.GetFeature(object_index, std::get<0>(split)) <= std::get<1>(split)) {
                 list_index = list_index * 2 + 1;
             } else {
                 list_index = list_index * 2 + 2;
@@ -97,9 +98,13 @@ std::vector<float_type> Tree::PredictFromBins(const std::vector<std::vector<bin_
 
 
 std::vector<float_type> Tree::PredictFromFile(const std::string& filename,
-                                              std::shared_ptr<const Dataset> dataset,
+                                              const FeatureTransformer& ft,
+                                              bool fileHasTarget, 
                                               char sep) const {
-    std::vector<std::vector<float_type>> data_x;
-    dataset->GetSampleAndTargetFromFile(filename, sep, &data_x); 
-    return PredictFromBins(dataset->Transform(data_x));
+    TestDataset dataset(filename, ft, fileHasTarget);
+    return PredictFromDataset(dataset);
+}
+
+bool Tree::IsInitialized() const {
+    return initialized_;
 }

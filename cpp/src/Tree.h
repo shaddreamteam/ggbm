@@ -5,7 +5,7 @@
 #include <memory>
 #include <tuple>
 #include "Dataset.h"
-#include "GGBM.h"
+#include "OptData.h"
 #include "Leaf.h"
 
 class Tree {
@@ -18,9 +18,15 @@ public:
 
 
     Tree(uint32_t max_depth) : initialized_(false), max_depth_(max_depth) {};
-    void Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<const OptData> optData, float_type lambda_l2_reg);
-    std::vector<float_type> PredictFromBins(const std::vector<std::vector<bin_id>>& data_x_binned) const;
-    std::vector<float_type> PredictFromFile(const std::string& filename, std::shared_ptr<const Dataset> dataset, char sep=',') const;
+    void Construct(std::shared_ptr<const TrainDataset> dataset, 
+                   std::shared_ptr<const OptData> optData, 
+                   float_type lambda_l2_reg);
+    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
+    std::vector<float_type> PredictFromFile(const std::string& filename, 
+                                            const FeatureTransformer& ft, 
+                                            bool fileHasTarget,
+                                            char sep=',') const;
+    bool IsInitialized() const;
 
 private:
     bool initialized_;

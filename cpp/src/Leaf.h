@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include "Base.h"
-#include "GGBM.h"
+#include "OptData.h"
 #include "Dataset.h"
 
 class Histogram {
@@ -36,7 +36,7 @@ private:
 class Leaf {
 public:
     Leaf() {};
-    Leaf(uint32_t leaf_index, float_type weight, std::vector<uint32_t> row_indexes, std::shared_ptr<const Dataset> dataset, std::shared_ptr<const OptData> optData):
+    Leaf(uint32_t leaf_index, float_type weight, std::vector<uint32_t> row_indexes, std::shared_ptr<const TrainDataset> dataset, std::shared_ptr<const OptData> optData):
         leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes), dataset_(dataset), optData_(optData) {};
 
     Histogram GetHistogram(uint32_t feature_number, float_type lambda_l2_reg) const;
@@ -50,7 +50,7 @@ private:
     uint32_t leaf_index_;
     float_type weight_;
     std::vector<uint32_t> row_indexes_;
-    std::shared_ptr<const Dataset> dataset_;
+    std::shared_ptr<const TrainDataset> dataset_;
     std::shared_ptr<const OptData> optData_;
 };
 #endif //CPP_LEAF_H

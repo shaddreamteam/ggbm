@@ -9,52 +9,42 @@
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
 
-#ifdef DEBUG
-#include <cmath>
-#endif //DEBUG
-//class Row {
-//public:
-//
-//private:
-//    float_type target_;
-//    float_type gradient_;
-//    float_type hessian_;
-//};
-
-
 class Dataset {
 public:
-    Dataset(const std::string& filename, uint32_t thread_count);
-#ifdef DEBUG
-    Dataset(std::vector<std::vector<bin_id>> feature_bin_ids) :
-        feature_bin_ids_(feature_bin_ids),
-        ft_(0) {}
-#endif //DEBUG
     bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
-    float_type GetTarget(uint32_t row_number) const;
-    uint32_t GetBinCount(uint32_t feature_number) const;
     uint32_t GetNRows() const;
     uint32_t GetNFeatures() const;
 
-    std::vector<std::vector<bin_id>> Transform(const std::vector<std::vector<float_type>>& feature_values) const;
+//    std::vector<std::vector<float_type>> Test(const std::string& filename) {
+//        std::vector<std::vector<float_type>> res;
+//        GetSampleAndTargetFromFile(filename, ',', &res);
+//        return res;
+//    };
 
-    std::vector<float_type> targets_;
+protected:
     std::vector<std::vector<bin_id>> feature_bin_ids_;
+ 
+    Dataset() {};
+    void GetDataFromFile(std::string filename, char sep,
+                         std::vector<std::vector<float_type>>& feature_values,
+                         std::vector<float_type>* targets,
+                         bool isTargetFirst) const;
+};
 
-    std::vector<std::vector<float_type>> Test(const std::string& filename) {
-        std::vector<std::vector<float_type>> res;
-        GetSampleAndTargetFromFile(filename, ',', &res);
-        return res;
-    };
-
-    void GetSampleAndTargetFromFile(std::string filename, char sep,
-                                    std::vector<std::vector<float_type>>* feature_values,
-                                    std::vector<float_type>* targets=nullptr) const;
+class TrainDataset : public Dataset {
+public:
+    TrainDataset(const std::string& filename, FeatureTransformer& f);
+    float_type GetTarget(uint32_t row_number) const;
+    uint32_t GetBinCount(uint32_t feature_number) const;
 
 private:
+    std::vector<float_type> targets_;
+    std::vector<uint32_t> bin_counts_;
+};
 
-    FeatureTransformer ft_;
-
+class TestDataset : public Dataset {
+public:
+    TestDataset(const std::string& filename, const FeatureTransformer& ft, bool fileHasTarget);
 };
 
 class CSVReader {
@@ -64,6 +54,5 @@ public:
 private:
 
 };
-
 
 #endif //CPP_DATASET_H
