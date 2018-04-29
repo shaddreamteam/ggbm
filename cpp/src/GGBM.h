@@ -17,8 +17,10 @@ public:
             uint32_t depth, uint32_t n_estimators, float_type lambda_l2_reg, 
             float_type learning_rate);
 
+    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
 private:
     bool initialized_;
+    float_type base_prediction_;
     float_type learning_rate_;
     std::vector<Tree> trees_;
 };

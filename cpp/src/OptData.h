@@ -8,12 +8,16 @@
 class OptData {
 public:
     OptData(const TrainDataset& dataset,
-            const std::vector<float_type>& predictionsi,
+            const std::vector<float_type>& predictions,
             const Loss& loss); 
 
     float_type GetGradient(uint32_t row_number) const;
     float_type GetHessian(uint32_t row_number) const;    
     float_type GetPrediction(uint32_t row_number) const;    
+    void Update(const TrainDataset& dataset,
+                const std::vector<float_type>& increment_predictions,
+                float_type learning_rate,
+                const Loss& loss); 
 
 private:
     std::vector<float_type> gradients_;

@@ -2,7 +2,7 @@
 #include "src/Dataset.h"
 #include "src/Loss.h"
 #include "src/Tree.h"
-
+#include "src/GGBM.h"
 
 
 int main() {
@@ -49,14 +49,35 @@ int main() {
     std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(*dataset,
             predictions, loss);
     
-    Tree tree(2);
-    tree.Construct(dataset, optData_p, 0);
+//    Tree tree(2);
+//    tree.Construct(dataset, optData_p, 0);
 
-    auto preds = tree.PredictFromFile("test.csv", ft, false);
+//    auto preds = tree.PredictFromFile("test.csv", ft, false);
+
+
+    GGBM ggbm;
+    ggbm.Train(dataset, loss, 2, 3, 0, 1);
+    auto preds = ggbm.PredictFromDataset(*dataset);
 
     std::cout << "preds:" << std::endl;
     for(auto& pred : preds) {
-        std::cout << first_prediction + pred << ' ';
+        std::cout << pred << ' ';
+    }
+    std::cout << std::endl;
+
+    ggbm = GGBM();
+    ggbm.Train(dataset, loss, 1, 3, 0, 1);
+    std::cout << "preds:" << std::endl;
+    for(auto& pred : preds) {
+        std::cout << pred << ' ';
+    }
+    std::cout << std::endl;
+
+    ggbm = GGBM();
+    ggbm.Train(dataset, loss, 2, 10, 0, 0.1);
+    std::cout << "preds:" << std::endl;
+    for(auto& pred : preds) {
+        std::cout << pred << ' ';
     }
     std::cout << std::endl;
 

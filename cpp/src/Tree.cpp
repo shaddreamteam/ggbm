@@ -69,10 +69,10 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
     if(depth_ > 0) {
         weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
         initialized_ = true;
-    }
 
-    for(const auto& leaf : leafs) {
-        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
+        for(const auto& leaf : leafs) {
+            weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
+        }
     }
 }
 
