@@ -18,7 +18,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
         uint32_t best_feature;
         bin_id best_bin;
         uint32_t size = leafs.size();
-        std::vector<float_type> best_left_weigths(size), best_right_weigts(size);
+        std::vector<float_type> best_left_weigths(size), best_right_weights(size);
         for(uint32_t feature_number = 0; feature_number < dataset->GetNFeatures(); ++feature_number) {
             for(bin_id bin_number = 0; bin_number < dataset->GetBinCount(feature_number); ++bin_number) {
                 float_type gain = 0;
@@ -39,7 +39,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
                     best_feature = feature_number;
                     best_bin = bin_number;
                     best_left_weigths = left_weigths;
-                    best_right_weigts = right_weigts;
+                    best_right_weights = right_weigts;
                 }
             }
         }
@@ -50,7 +50,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
             std::vector<Leaf> new_leafs;
             for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
                 std::tie(left, right) = leafs[leaf_number].MakeChilds(best_feature, best_bin,
-                        best_left_weigths[leaf_number], best_right_weigts[leaf_number]);
+                        best_left_weigths[leaf_number], best_right_weights[leaf_number]);
                 if(!left.IsEmpty()) {
                     new_leafs.push_back(left);
                 }
@@ -59,6 +59,7 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
                 }
             }
             leafs = new_leafs;
+            ++depth_;
         } else {
             break;
         }
@@ -68,5 +69,40 @@ void Tree::Construct(std::shared_ptr<const Dataset> dataset, std::shared_ptr<con
         weights_ = std::vector<float_type>(uint32_t(pow(2, depth)), 0);
         initialized_ = true;
     }
+
+    std::cout << "leaf weights: ";
+    for(auto& leaf : leafs) {
+        std::cout << leaf.GetWeight() << ' ';
+    }
+    std::cout << std::endl;
+
 }
 
+
+std::vector<float_type> Tree::PredictFromBins(const std::vector<std::vector<bin_id>>& data_x_binned) const{
+    std::vector<float_type> predictions;
+    predictions.reserve(weights_.size());
+
+    for(uint32_t object_index = 0; object_index < data_x_binned[0].size(); ++object_index) {
+        uint32_t list_index = 0;
+        for (auto& split : splits_) {
+            if(data_x_binned[std::get<0>(split)][object_index] <= std::get<1>(split)) {
+                list_index = list_index * 2 + 1;
+            } else {
+                list_index = list_index * 2 + 2;
+            }
+        }
+        auto prediction = weights_[list_index - uint32_t(pow(2, depth_)) + 1];
+        predictions.push_back(prediction);
+    }
+    return predictions;
+}
+
+
+std::vector<float_type> Tree::PredictFromFile(const std::string& filename,
+                                              std::shared_ptr<const Dataset> dataset,
+                                              char sep) const {
+    std::vector<std::vector<float_type>> data_x;
+    dataset->GetSampleAndTargetFromFile(filename, sep, &data_x); 
+    return PredictFromBins(dataset->Transform(data_x));
+}

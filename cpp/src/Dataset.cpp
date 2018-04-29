@@ -37,9 +37,14 @@ uint32_t Dataset::GetNFeatures() const{
     return feature_bin_ids_.size();
 }
 
+std::vector<std::vector<bin_id>> Dataset::Transform(
+    const std::vector<std::vector<float_type>>& feature_values) const{
+    return ft_.Transform(feature_values);
+}
+
 void Dataset::GetSampleAndTargetFromFile(std::string filename, char sep,
                                          std::vector<std::vector<float_type>>* feature_values,
-                                         std::vector<float_type>* targets) {
+                                         std::vector<float_type>* targets) const{
 
     // read data from file and store it into feature_values and targets
     // sep -- ',' or '\t'
@@ -51,22 +56,31 @@ void Dataset::GetSampleAndTargetFromFile(std::string filename, char sep,
 
     std::getline(file, line);
     size_t n = std::count(line.begin(), line.end(), sep);
+    if(targets == nullptr) {
+        ++n;
+    }
+
     feature_values->reserve(n);
     std::istringstream ss(line);
     std::string token;
-    std::getline(ss, token, sep);
-    targets->push_back(std::stof(token));
+
+    if(targets != nullptr) {
+        std::getline(ss, token, sep);
+        targets->push_back(std::stof(token));
+    }
 
     while(std::getline(ss, token, sep)) {
         feature_values->push_back({std::stof(token)});
     }
 
-    while (std::getline(file, line)) {
+    while(std::getline(file, line)) {
         std::istringstream ss(line);
         std::string token;
 
-        std::getline(ss, token, sep);
-        targets->push_back(std::stof(token));
+        if(targets != nullptr) {
+            std::getline(ss, token, sep);
+            targets->push_back(std::stof(token));
+        }
 
         size_t idx = 0;
         while(std::getline(ss, token, sep)) {

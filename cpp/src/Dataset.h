@@ -36,12 +36,22 @@ public:
     uint32_t GetNRows() const;
     uint32_t GetNFeatures() const;
 
+    std::vector<std::vector<bin_id>> Transform(const std::vector<std::vector<float_type>>& feature_values) const;
+
     std::vector<float_type> targets_;
     std::vector<std::vector<bin_id>> feature_bin_ids_;
-private:
+
+    std::vector<std::vector<float_type>> Test(const std::string& filename) {
+        std::vector<std::vector<float_type>> res;
+        GetSampleAndTargetFromFile(filename, ',', &res);
+        return res;
+    };
+
     void GetSampleAndTargetFromFile(std::string filename, char sep,
                                     std::vector<std::vector<float_type>>* feature_values,
-                                    std::vector<float_type>* targets);
+                                    std::vector<float_type>* targets=nullptr) const;
+
+private:
 
     FeatureTransformer ft_;
 

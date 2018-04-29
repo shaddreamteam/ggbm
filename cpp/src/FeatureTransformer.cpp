@@ -27,7 +27,7 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
 }
 
 std::vector<std::vector<bin_id>>
-FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& feature_values) {
+FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& feature_values) const{
     if (!initialized_) {
         throw std::runtime_error("Not initialized");
     }
