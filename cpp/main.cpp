@@ -67,6 +67,7 @@ int main() {
 
     ggbm = GGBM();
     ggbm.Train(dataset, loss, 1, 3, 0, 1);
+    preds = ggbm.PredictFromDataset(*dataset);
     std::cout << "preds:" << std::endl;
     for(auto& pred : preds) {
         std::cout << pred << ' ';
@@ -74,7 +75,17 @@ int main() {
     std::cout << std::endl;
 
     ggbm = GGBM();
-    ggbm.Train(dataset, loss, 2, 10, 0, 0.1);
+    ggbm.Train(dataset, loss, 2, 100, 0, 0.1);
+    preds = ggbm.PredictFromDataset(*dataset);
+    std::cout << "preds:" << std::endl;
+    for(auto& pred : preds) {
+        std::cout << pred << ' ';
+    }
+    std::cout << std::endl;
+
+    ggbm = GGBM();
+    ggbm.Train(dataset, loss, 2, 100, 0.1, 0.1);
+    preds = ggbm.PredictFromDataset(*dataset);
     std::cout << "preds:" << std::endl;
     for(auto& pred : preds) {
         std::cout << pred << ' ';
