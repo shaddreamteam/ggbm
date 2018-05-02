@@ -20,7 +20,9 @@ public:
     Tree(uint32_t max_depth) : initialized_(false), max_depth_(max_depth) {};
     void Construct(std::shared_ptr<const TrainDataset> dataset, 
                    std::shared_ptr<const OptData> optData, 
-                   float_type lambda_l2_reg);
+                   float_type lambda_l2_reg,
+                   float_type row_sampling,
+                   uint32_t min_subsample);
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
     std::vector<float_type> PredictFromFile(const std::string& filename, 
                                             const FeatureTransformer& ft, 

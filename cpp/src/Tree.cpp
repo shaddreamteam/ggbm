@@ -4,18 +4,42 @@
 //#include <functional>
 #include <tuple>
 #include <vector>
+#include <random>
 #include <numeric>
 #include "Tree.h"
 
 class OptData;
 void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
                      std::shared_ptr<const OptData> optData,
-                     float_type lambda_l2_reg) {
-    std::vector<uint32_t> indexes(dataset->GetNRows());
-    std::iota(indexes.begin(), indexes.end(), 0);
+                     float_type lambda_l2_reg,
+                     float_type row_sampling,
+                     uint32_t min_subsample) {
+    std::vector<uint32_t> indexes;
+    // Here we should check that row_sampling in (0, 1]
+    // and min_subsample <= dataset-GetNRows
+    if(row_sampling >= 1 - EPS) {
+        indexes = std::vector<uint32_t>(dataset->GetNRows());
+        std::iota(indexes.begin(), indexes.end(), 0);
+    } else {
+        float_type sampling_coef = std::max(row_sampling,
+                float(min_subsample) / dataset->GetNRows());
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_real_distribution<double> distribution(0.0,1.0);
+        for(uint32_t i = 0; i < dataset->GetNRows(); ++i) {
+            if(distribution(generator) < sampling_coef) {
+                indexes.push_back(i);
+            }
+        }
+    }
+
+    std::vector<std::tuple<uint32_t, bin_id>> splits;
     std::vector<Leaf> leafs = {Leaf(0, 0, indexes, dataset, optData)};;
+    std::vector<Leaf> best_leafs = leafs;
+    uint32_t best_depth = 0;
     float_type best_gain = 0;
-    for(depth_ = 0; depth_ < max_depth_; ++depth_) {
+
+    for(uint32_t depth = 0; depth < max_depth_; ++depth) {
         float_type prev_gain = best_gain;
         uint32_t best_feature;
         bin_id best_bin;
@@ -46,32 +70,37 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
             }
         }
 
-        if(best_gain < prev_gain - EPS) {
-            splits_.push_back(std::make_tuple(best_feature, best_bin));
-            Leaf left, right;
-            std::vector<Leaf> new_leafs;
-            for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
-                std::tie(left, right) = leafs[leaf_number].MakeChilds(best_feature, best_bin,
-                        best_left_weigths[leaf_number], best_right_weights[leaf_number]);
-                if(!left.IsEmpty()) {
-                    new_leafs.push_back(left);
-                }
-                if(!right.IsEmpty()) {
-                    new_leafs.push_back(right);
-                }
+        splits.push_back(std::make_tuple(best_feature, best_bin));
+        Leaf left, right;
+        std::vector<Leaf> new_leafs;
+        for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
+            std::tie(left, right) = leafs[leaf_number].MakeChilds(best_feature, best_bin,
+                    best_left_weigths[leaf_number], best_right_weights[leaf_number]);
+            if(!left.IsEmpty()) {
+                new_leafs.push_back(left);
             }
-            leafs = new_leafs;
-        } else {
-            break;
+            if(!right.IsEmpty()) {
+                new_leafs.push_back(right);
+            }
+        }
+        leafs = new_leafs;
+
+        if(best_gain < prev_gain - EPS) {
+            best_leafs = new_leafs;
+            best_depth = depth + 1;
         }
     }
     
-    if(depth_ > 0) {
+    if(best_depth > 0) {
+        depth_ = best_depth;
         weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
         initialized_ = true;
 
-        for(const auto& leaf : leafs) {
+        for(const auto& leaf : best_leafs) {
             weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
+        }
+        for(uint32_t i = 0; i < best_depth; ++ i) {
+            splits_.push_back(splits[i]);
         }
     }
 }

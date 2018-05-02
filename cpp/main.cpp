@@ -38,60 +38,71 @@ int main() {
     //               << int(x_test_bins[1][i]) << ' '
     //               << preds[i] << std::endl;
     // }
+//    FeatureTransformer ft(1);
+//    std::shared_ptr<const TrainDataset> dataset = 
+//        std::make_shared<const TrainDataset>("train.csv", ft);
+//    MSE loss;
+//
+//    float_type first_prediction = loss.GetFirstPrediction(*dataset);
+//    std::vector<float_type> predictions(dataset->GetNRows(), first_prediction);
+//
+//    std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(*dataset,
+//            predictions, loss);
+//    
+////    Tree tree(2);
+////    tree.Construct(dataset, optData_p, 0);
+//
+////    auto preds = tree.PredictFromFile("test.csv", ft, false);
+//
+//
+//    GGBM ggbm;
+//    ggbm.Train(dataset, loss, 2, 3, 0, 1);
+//    auto preds = ggbm.PredictFromDataset(*dataset);
+//
+//    std::cout << "preds:" << std::endl;
+//    for(auto& pred : preds) {
+//        std::cout << pred << ' ';
+//    }
+//    std::cout << std::endl;
+//
+//    ggbm = GGBM();
+//    ggbm.Train(dataset, loss, 1, 3, 0, 1);
+//    preds = ggbm.PredictFromDataset(*dataset);
+//    std::cout << "preds:" << std::endl;
+//    for(auto& pred : preds) {
+//        std::cout << pred << ' ';
+//    }
+//    std::cout << std::endl;
+//
+//    ggbm = GGBM();
+//    ggbm.Train(dataset, loss, 2, 100, 0, 0.1);
+//    preds = ggbm.PredictFromDataset(*dataset);
+//    std::cout << "preds:" << std::endl;
+//    for(auto& pred : preds) {
+//        std::cout << pred << ' ';
+//    }
+//    std::cout << std::endl;
+//
+//    ggbm = GGBM();
+//    ggbm.Train(dataset, loss, 2, 100, 0.1, 0.1);
+//    preds = ggbm.PredictFromDataset(*dataset);
+//    std::cout << "preds:" << std::endl;
+//    for(auto& pred : preds) {
+//        std::cout << pred << ' ';
+//    }
+//    std::cout << std::endl;
+//
+    
     FeatureTransformer ft(1);
     std::shared_ptr<const TrainDataset> dataset = 
-        std::make_shared<const TrainDataset>("train.csv", ft);
+        std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
     MSE loss;
-
-    float_type first_prediction = loss.GetFirstPrediction(*dataset);
-    std::vector<float_type> predictions(dataset->GetNRows(), first_prediction);
-
-    std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(*dataset,
-            predictions, loss);
-    
-//    Tree tree(2);
-//    tree.Construct(dataset, optData_p, 0);
-
-//    auto preds = tree.PredictFromFile("test.csv", ft, false);
-
-
     GGBM ggbm;
-    ggbm.Train(dataset, loss, 2, 3, 0, 1);
-    auto preds = ggbm.PredictFromDataset(*dataset);
-
-    std::cout << "preds:" << std::endl;
+    ggbm.Train(dataset, loss, 2, 200, 0.09, 0.05, 0.8, 1);
+    TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
+    auto preds = ggbm.PredictFromDataset(test);
     for(auto& pred : preds) {
         std::cout << pred << ' ';
     }
-    std::cout << std::endl;
-
-    ggbm = GGBM();
-    ggbm.Train(dataset, loss, 1, 3, 0, 1);
-    preds = ggbm.PredictFromDataset(*dataset);
-    std::cout << "preds:" << std::endl;
-    for(auto& pred : preds) {
-        std::cout << pred << ' ';
-    }
-    std::cout << std::endl;
-
-    ggbm = GGBM();
-    ggbm.Train(dataset, loss, 2, 100, 0, 0.1);
-    preds = ggbm.PredictFromDataset(*dataset);
-    std::cout << "preds:" << std::endl;
-    for(auto& pred : preds) {
-        std::cout << pred << ' ';
-    }
-    std::cout << std::endl;
-
-    ggbm = GGBM();
-    ggbm.Train(dataset, loss, 2, 100, 0.1, 0.1);
-    preds = ggbm.PredictFromDataset(*dataset);
-    std::cout << "preds:" << std::endl;
-    for(auto& pred : preds) {
-        std::cout << pred << ' ';
-    }
-    std::cout << std::endl;
-
-    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
