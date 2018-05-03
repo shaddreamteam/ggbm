@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
         std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
     MSE loss;
     GGBM ggbm;
-    ggbm.Train(dataset, loss, 2, 200, 0.09, 0.05, 0.8, 1);
+    ggbm.Train(dataset, loss, 2, 1, 0.0, 1, 1, 1);
     TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
     auto preds = ggbm.PredictFromDataset(test);
     for(auto& pred : preds) {

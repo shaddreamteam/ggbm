@@ -1,6 +1,9 @@
 #include <exception>
 #include <algorithm>
 #include <cmath>
+#include <queue>
+#include <thread>
+#include <mutex>
 
 #include "FeatureTransformer.h"
 #include "TaskQueue.h"
@@ -10,7 +13,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
               const std::vector<uint32_t>& counts,
               uint64_t total_cnt);
 
-struct FindBinFunctor {
+/*struct FindBinFunctor {
     explicit FindBinFunctor(const std::vector<float_type>* feature_vector,
                    std::vector<float_type>* out_bin_upper_bounds)
             : feature_vector_(feature_vector),
@@ -36,15 +39,15 @@ struct FindBinFunctor {
 private:
     const std::vector<float_type>* feature_vector_;
     std::vector<float_type>* out_bin_upper_bounds_;
-};
+};*/
 
 std::vector<std::vector<bin_id>>
 FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& feature_values) {
     std::vector<std::vector<bin_id>> transform_result;
     bin_upper_bounds_.resize(feature_values.size());
-    std::vector<FindBinFunctor> tasks;
+
     int32_t j = 0;
-    auto find_bin_vector = [&feature_values, this, j]() {
+    auto find_bin_vector = [&feature_values, this](int32_t j) {
         auto feature_vector = feature_values[j]; // copy to sort
         std::sort(feature_vector.begin(), feature_vector.end());
         std::vector<float_type> distinct_values = {feature_vector[0]};
@@ -60,12 +63,33 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
         uint64_t row_count = feature_vector.size();
         this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
     };
-    TaskQueue<decltype(find_bin_vector)> task_queue(thread_count_);
+
+    std::queue<int32_t> queue;
     for (j = 0; j < feature_values.size(); ++j) {
-        task_queue.Add(find_bin_vector);
+        queue.push(j);
     }
 
-    task_queue.Run();
+    std::vector<std::thread> threads;
+    std::mutex mutex;
+    for(int32_t j = 0; j < thread_count_; ++j) {
+        threads.emplace_back([&queue, &mutex, &find_bin_vector] {
+            while(true) {
+                mutex.lock();
+                if (queue.empty()) {
+                    mutex.unlock();
+                    break;
+                }
+                auto task = queue.front();
+                queue.pop();
+                mutex.unlock();
+                find_bin_vector(task);
+            }
+        });
+    }
+
+    for (int32_t i = 0; i < thread_count_; ++i) {
+        threads[i].join();
+    }
 
     initialized_ = true;
     return Transform(feature_values);
@@ -77,17 +101,44 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
         throw std::runtime_error("Not initialized");
     }
     std::vector<std::vector<bin_id>> transform_res;
-    transform_res.reserve(feature_values.size());
-    for (uint32_t index = 0; index < feature_values.size(); ++index) {
-        std::vector<bin_id> feature_bins;
-        feature_bins.reserve(feature_values[index].size());
-        for (auto value: feature_values[index]) {
-            bin_id bin = std::upper_bound(bin_upper_bounds_[index].begin(),
-                                          bin_upper_bounds_[index].end(),
-                                          value) - bin_upper_bounds_[index].begin();
-            feature_bins.push_back(bin);
+    transform_res.resize(feature_values.size());
+
+    int32_t j = 0;
+    auto transform_vector = [&feature_values, &transform_res, this](int32_t j) {
+        transform_res[j].reserve(feature_values[j].size());
+        for (auto value: feature_values[j]) {
+            bin_id bin = std::upper_bound(this->bin_upper_bounds_[j].begin(),
+                                          this->bin_upper_bounds_[j].end(),
+                                          value) - this->bin_upper_bounds_[j].begin();
+            transform_res[j].push_back(bin);
         }
-        transform_res.push_back(feature_bins);
+    };
+
+    std::queue<int32_t> queue;
+    for (j = 0; j < feature_values.size(); ++j) {
+        queue.push(j);
+    }
+
+    std::vector<std::thread> threads;
+    std::mutex mutex;
+    for(int32_t j = 0; j < thread_count_; ++j) {
+        threads.emplace_back([&queue, &mutex, &transform_vector] {
+            while(true) {
+                mutex.lock();
+                if (queue.empty()) {
+                    mutex.unlock();
+                    break;
+                }
+                auto task = queue.front();
+                queue.pop();
+                mutex.unlock();
+                transform_vector(task);
+            }
+        });
+    }
+
+    for (int32_t i = 0; i < thread_count_; ++i) {
+        threads[i].join();
     }
 
     return transform_res;
