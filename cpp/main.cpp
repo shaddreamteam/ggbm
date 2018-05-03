@@ -3,9 +3,10 @@
 #include "src/Loss.h"
 #include "src/Tree.h"
 #include "src/GGBM.h"
+#include "src/InputParser.h"
+#include "src/InputParser.cpp"
 
-
-int main() {
+int main(int argc, char **argv) {
 
     // uint32_t depth=2;
     // std::cout << "depth=" << depth << std::endl;
@@ -92,17 +93,27 @@ int main() {
 //    }
 //    std::cout << std::endl;
 //
+
     
-    FeatureTransformer ft(1);
-    std::shared_ptr<const TrainDataset> dataset = 
-        std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
-    MSE loss;
-    GGBM ggbm;
-    ggbm.Train(dataset, loss, 2, 200, 0.09, 0.05, 0.8, 1);
-    TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
-    auto preds = ggbm.PredictFromDataset(test);
-    for(auto& pred : preds) {
-        std::cout << pred << ' ';
-    }
+    // FeatureTransformer ft(1);
+    // std::shared_ptr<const TrainDataset> dataset = 
+    //     std::make_shared<const TrainDataset>("train.csv", ft);
+    // MSE loss;
+    // GGBM ggbm;
+    // ggbm.Train(dataset, loss, 2, 200, 0.09, 0.05, 0.8, 1);
+    // TestDataset test("test.csv", ft, false);
+    // auto preds = ggbm.PredictFromDataset(test);
+    // for(auto& pred : preds) {
+    //     std::cout << pred << ' ';
+    // }
+
+
+
+    // InputParser prs(argc, argv);
+    // std::cout << prs.GetLoss() << std::endl;
+    // std::cout << prs.GetLearningRate() << std::endl;
+    // std::cout << prs.GetDepth() << std::endl;
+    // std::cout << prs.GetNThreads() << std::endl;
+
     return 0;
 }
