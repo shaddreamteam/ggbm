@@ -3,9 +3,10 @@
 #include "src/Loss.h"
 #include "src/Tree.h"
 #include "src/GGBM.h"
+#include "src/InputParser.h"
+#include "src/InputParser.cpp"
 
-
-int main() {
+int main(int argc, char **argv) {
 
     // uint32_t depth=2;
     // std::cout << "depth=" << depth << std::endl;
@@ -92,7 +93,7 @@ int main() {
 //    }
 //    std::cout << std::endl;
 //
-    
+
     FeatureTransformer ft(2);
     std::shared_ptr<const TrainDataset> dataset = 
         std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
