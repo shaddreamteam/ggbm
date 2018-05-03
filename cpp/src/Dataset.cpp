@@ -51,7 +51,7 @@ void Dataset::GetDataFromFile(std::string filename,
             if(!hasTarget) {
                 ++n;
             }
-            feature_values = std::vector<std::vector<float_type>>(n);
+            feature_values.resize(n);
         }
         std::istringstream ss(line);
         std::string token;

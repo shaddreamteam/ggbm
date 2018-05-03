@@ -18,9 +18,9 @@ public:
     
     uint32_t GetBinCount(uint32_t feature_number) const;
 private:
-    std::vector<float_type> GreedyFindBin(const std::vector<float_type>& distinct_values,
+/*    std::vector<float_type> GreedyFindBin(const std::vector<float_type>& distinct_values,
                                           const std::vector<uint32_t>& counts,
-                                          uint64_t total_cnt);
+                                          uint64_t total_cnt);*/
 
     bool initialized_;
     uint32_t thread_count_;

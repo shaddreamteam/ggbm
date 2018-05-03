@@ -1,12 +1,23 @@
 #include <exception>
 #include <algorithm>
 #include <cmath>
-#include "FeatureTransformer.h"
 
-std::vector<std::vector<bin_id>>
-FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& feature_values) {
-    std::vector<std::vector<bin_id>> transform_result;
-    for (auto feature_vector: feature_values) { // copy to sort
+#include "FeatureTransformer.h"
+#include "TaskQueue.h"
+
+std::vector<float_type>
+GreedyFindBin(const std::vector<float_type>& distinct_values,
+              const std::vector<uint32_t>& counts,
+              uint64_t total_cnt);
+
+struct FindBinFunctor {
+    explicit FindBinFunctor(const std::vector<float_type>* feature_vector,
+                   std::vector<float_type>* out_bin_upper_bounds)
+            : feature_vector_(feature_vector),
+              out_bin_upper_bounds_(out_bin_upper_bounds) {}
+
+    void operator()() {
+        auto feature_vector = *feature_vector_; // copy to sort
         std::sort(feature_vector.begin(), feature_vector.end());
         std::vector<float_type> distinct_values = {feature_vector[0]};
         std::vector<uint32_t> counts = {1};
@@ -19,8 +30,42 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
             }
         }
         uint64_t row_count = feature_vector.size();
-        bin_upper_bounds_.push_back(GreedyFindBin(distinct_values, counts, row_count));
+        *out_bin_upper_bounds_ = GreedyFindBin(distinct_values, counts, row_count);
     }
+
+private:
+    const std::vector<float_type>* feature_vector_;
+    std::vector<float_type>* out_bin_upper_bounds_;
+};
+
+std::vector<std::vector<bin_id>>
+FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& feature_values) {
+    std::vector<std::vector<bin_id>> transform_result;
+    bin_upper_bounds_.resize(feature_values.size());
+    std::vector<FindBinFunctor> tasks;
+    int32_t j = 0;
+    auto find_bin_vector = [&feature_values, this, j]() {
+        auto feature_vector = feature_values[j]; // copy to sort
+        std::sort(feature_vector.begin(), feature_vector.end());
+        std::vector<float_type> distinct_values = {feature_vector[0]};
+        std::vector<uint32_t> counts = {1};
+        for (uint32_t i = 1; i < feature_vector.size(); ++i) {
+            if (feature_vector[i] == distinct_values.back()) {
+                ++counts.back();
+            } else {
+                distinct_values.push_back(feature_vector[i]);
+                counts.push_back(1);
+            }
+        }
+        uint64_t row_count = feature_vector.size();
+        this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
+    };
+    TaskQueue<decltype(find_bin_vector)> task_queue(thread_count_);
+    for (j = 0; j < feature_values.size(); ++j) {
+        task_queue.Add(find_bin_vector);
+    }
+
+    task_queue.Run();
 
     initialized_ = true;
     return Transform(feature_values);
@@ -49,7 +94,7 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
 }
 
 std::vector<float_type>
-FeatureTransformer::GreedyFindBin(const std::vector<float_type>& distinct_values,
+GreedyFindBin(const std::vector<float_type>& distinct_values,
                                   const std::vector<uint32_t>& counts,
                                   uint64_t total_cnt) {
     std::vector<float_type> bin_upper_bound;

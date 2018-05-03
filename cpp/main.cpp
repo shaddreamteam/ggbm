@@ -93,7 +93,7 @@ int main() {
 //    std::cout << std::endl;
 //
     
-    FeatureTransformer ft(1);
+    FeatureTransformer ft(2);
     std::shared_ptr<const TrainDataset> dataset = 
         std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
     MSE loss;
