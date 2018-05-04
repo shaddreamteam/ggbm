@@ -102,8 +102,8 @@ int main(int argc, char **argv) {
     ggbm.Train(dataset, loss, 2, 1, 0.0, 1, 1, 1);
     TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
     auto preds = ggbm.PredictFromDataset(test);
-    for(auto& pred : preds) {
-        std::cout << pred << ' ';
+    for(int i = 0; i < preds.size() && i < 100; ++i) {
+        std::cout << preds[i] << ' ';
     }
     return 0;
 }
