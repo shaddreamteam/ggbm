@@ -12,7 +12,7 @@
 
 class GGBM {
 public:
-    GGBM(uint32_t thread_count): initialized_(false), thread_count_(thread_count) {};
+    GGBM(uint32_t thread_count): thread_count_(thread_count) {};
     void Train(const std::shared_ptr<const TrainDataset> trainData, const Loss& loss,
             uint32_t depth, uint32_t n_estimators, float_type lambda_l2_reg,
             float_type learning_rate, float_type row_sampling,
@@ -20,7 +20,6 @@ public:
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
 private:
-    bool initialized_;
     uint32_t thread_count_;
     float_type base_prediction_;
     float_type learning_rate_;

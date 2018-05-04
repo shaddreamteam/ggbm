@@ -108,7 +108,6 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
     auto num_distinct_values = distinct_values.size();
 
     if (num_distinct_values <= kMaxBin) {
-        int cur_cnt_inbin = 0;
         for (int i = 0; i < num_distinct_values - 1; ++i) {
             bin_upper_bound.push_back(std::nextafter(
                     (distinct_values[i] + distinct_values[i + 1]) / 2.0, INFINITY));

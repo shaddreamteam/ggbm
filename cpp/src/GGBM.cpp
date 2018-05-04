@@ -21,6 +21,7 @@ void GGBM::Train(const std::shared_ptr<const TrainDataset> trainDataset,
             auto tree_predictions = tree.PredictFromDataset(*trainDataset);
             optDataset->Update(*trainDataset, tree_predictions, learning_rate,
                     loss);
+            std::cout << "Tree #" << tree_number << " constructed" << std::endl;
         }
     }
 }

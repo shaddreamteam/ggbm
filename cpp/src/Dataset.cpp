@@ -80,6 +80,7 @@ TrainDataset::TrainDataset(const std::string& filename,
     for(uint32_t i = 0; i < bin_counts_.size(); ++i) {
         bin_counts_[i] = ft.GetBinCount(i);
     }
+    std::cout << "Train dataset initialized" << std::endl;
 }
 
 float_type TrainDataset::GetTarget(uint32_t row_number) const {
