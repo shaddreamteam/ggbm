@@ -64,32 +64,11 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
         this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
     };
 
-    std::queue<int32_t> queue;
+    TaskQueue<decltype(find_bin_vector), int32_t> task_queue(thread_count_, &find_bin_vector);
     for (j = 0; j < feature_values.size(); ++j) {
-        queue.push(j);
+        task_queue.Add(j);
     }
-
-    std::vector<std::thread> threads;
-    std::mutex mutex;
-    for(int32_t j = 0; j < thread_count_; ++j) {
-        threads.emplace_back([&queue, &mutex, &find_bin_vector] {
-            while(true) {
-                mutex.lock();
-                if (queue.empty()) {
-                    mutex.unlock();
-                    break;
-                }
-                auto task = queue.front();
-                queue.pop();
-                mutex.unlock();
-                find_bin_vector(task);
-            }
-        });
-    }
-
-    for (int32_t i = 0; i < thread_count_; ++i) {
-        threads[i].join();
-    }
+    task_queue.Run();
 
     initialized_ = true;
     return Transform(feature_values);
@@ -114,32 +93,11 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
         }
     };
 
-    std::queue<int32_t> queue;
+    TaskQueue<decltype(transform_vector), int32_t> task_queue(thread_count_, &transform_vector);
     for (j = 0; j < feature_values.size(); ++j) {
-        queue.push(j);
+        task_queue.Add(j);
     }
-
-    std::vector<std::thread> threads;
-    std::mutex mutex;
-    for(int32_t j = 0; j < thread_count_; ++j) {
-        threads.emplace_back([&queue, &mutex, &transform_vector] {
-            while(true) {
-                mutex.lock();
-                if (queue.empty()) {
-                    mutex.unlock();
-                    break;
-                }
-                auto task = queue.front();
-                queue.pop();
-                mutex.unlock();
-                transform_vector(task);
-            }
-        });
-    }
-
-    for (int32_t i = 0; i < thread_count_; ++i) {
-        threads[i].join();
-    }
+    task_queue.Run();
 
     return transform_res;
 }

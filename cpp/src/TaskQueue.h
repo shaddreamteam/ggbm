@@ -30,20 +30,19 @@ private:
     std::mutex* mutex_;
 };
 
-template <class Task>
+template <class Task, class Argument>
 class TaskQueue {
 public:
-    explicit TaskQueue(uint32_t thread_count) : thread_count_(thread_count) {}
+    explicit TaskQueue(uint32_t thread_count, Task* task) : thread_count_(thread_count),
+                                                            task_(task) {}
 
-    void Add(Task task) {
-        queue_.push(task);
+    void Add(Argument argument) {
+        queue_.push(argument);
     }
 
     void Run() {
         std::vector<std::thread> threads;
-//        std::vector<WorkerFunctor<std::queue<Task*>>> workers;
         for (int32_t i = 0; i < thread_count_; ++i) {
-//            workers.push_back({&queue_, &mutex_});
             threads.emplace_back([this] {
                 while(true) {
                     mutex_.lock();
@@ -51,10 +50,10 @@ public:
                         mutex_.unlock();
                         break;
                     }
-                    auto task = queue_.front();
+                    auto argument = queue_.front();
                     queue_.pop();
                     mutex_.unlock();
-                    (task)();
+                    (*task_)(argument);
                 }
                                  }
             );
@@ -67,8 +66,9 @@ public:
 
 private:
     uint32_t thread_count_;
-    std::queue<Task> queue_;
+    std::queue<Argument> queue_;
     std::mutex mutex_;
+    Task* task_;
 };
 
 
