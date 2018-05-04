@@ -11,7 +11,7 @@ uint32_t Dataset::GetNRows() const {
     return feature_bin_ids_.at(0).size();
 }
 
-uint32_t Dataset::GetNFeatures() const{
+uint32_t Dataset::GetFeatureCount() const{
     return feature_bin_ids_.size();
 }
 

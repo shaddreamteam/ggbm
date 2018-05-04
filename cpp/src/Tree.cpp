@@ -6,7 +6,18 @@
 #include <vector>
 #include <random>
 #include <numeric>
+
 #include "Tree.h"
+#include "TaskQueue.h"
+
+struct SearchParameters {
+    SearchParameters() : gain(0), bin(0) {}
+
+    float_type gain;
+    bin_id bin;
+    std::vector<float_type> left_weigths;
+    std::vector<float_type> right_weights;
+};
 
 class OptData;
 void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
@@ -41,41 +52,65 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
 
     for(uint32_t depth = 0; depth < max_depth_; ++depth) {
         float_type prev_gain = best_gain;
-        uint32_t best_feature;
-        bin_id best_bin;
-        uint32_t size = leafs.size();
-        std::vector<float_type> best_left_weigths(size), best_right_weights(size);
-        for(uint32_t feature_number = 0; feature_number < dataset->GetNFeatures(); ++feature_number) {
+        std::vector<SearchParameters> split_params(dataset->GetFeatureCount());
+
+        auto find_split = [&dataset, &leafs, &split_params,
+                lambda_l2_reg, this](int32_t feature_number) {
+            SearchParameters search_parameters;
             for(bin_id bin_number = 0; bin_number < dataset->GetBinCount(feature_number); ++bin_number) {
                 float_type gain = 0;
-                std::vector<float_type> left_weigths(size), right_weigts(size);
+                std::vector<float_type> left_weigths(leafs.size()), right_weigts(leafs.size());
                 std::vector<Histogram> histograms;
                 for(const Leaf& leaf : leafs) {
                     histograms.push_back(leaf.GetHistogram(feature_number, lambda_l2_reg));
                 }
                 for(uint32_t hist_number = 0; hist_number < histograms.size(); ++hist_number) {
-                    gain += histograms[hist_number].CalculateSplitGain(bin_number); 
-                    std::tie(left_weigths[hist_number], 
-                            right_weigts[hist_number]) =
-                        histograms[hist_number].CalculateSplitWeights(bin_number);
+                    gain += histograms[hist_number].CalculateSplitGain(bin_number);
+                    std::tie(left_weigths[hist_number],
+                             right_weigts[hist_number]) =
+                            histograms[hist_number].CalculateSplitWeights(bin_number);
                 }
 
-                if(gain < best_gain) {
-                    best_gain = gain;
-                    best_feature = feature_number;
-                    best_bin = bin_number;
-                    best_left_weigths = left_weigths;
-                    best_right_weights = right_weigts;
+                if(gain < search_parameters.gain) {
+                    search_parameters.gain = gain;
+                    search_parameters.bin = bin_number;
+                    search_parameters.left_weigths = left_weigths;
+                    search_parameters.right_weights = right_weigts;
                 }
             }
-        }
 
-        splits.push_back(std::make_tuple(best_feature, best_bin));
+            split_params[feature_number] = search_parameters;
+        };
+
+        TaskQueue<decltype(find_split), int32_t> task_queue(thread_count_, &find_split);
+        for (int32_t feature_number = 0;
+             feature_number < dataset->GetFeatureCount();
+             ++feature_number) {
+            task_queue.Add(feature_number);
+        }
+        task_queue.Run();
+
+        uint32_t best_feature = 0;
+        best_gain = split_params[0].gain;
+
+        for (uint32_t i = 1; i < split_params.size(); ++i) {
+            if (split_params[i].gain < best_gain) {
+                best_feature = i;
+                best_gain = split_params[i].gain;
+            }
+        }
+        auto best_params = split_params[best_feature];
+        split_params.clear();
+
+        splits.push_back(std::make_tuple(best_feature, best_params.bin));
         Leaf left, right;
         std::vector<Leaf> new_leafs;
         for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
-            std::tie(left, right) = leafs[leaf_number].MakeChilds(best_feature, best_bin,
-                    best_left_weigths[leaf_number], best_right_weights[leaf_number]);
+            std::tie(left, right) =
+                    leafs[leaf_number].MakeChilds(best_feature,
+                                                  best_params.bin,
+                                                  best_params.left_weigths[leaf_number],
+                                                  best_params.right_weights[leaf_number]);
             if(!left.IsEmpty()) {
                 new_leafs.push_back(left);
             }
@@ -96,7 +131,7 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
         initialized_ = true;
 
-        for(const auto& leaf : best_leafs) {
+        for(const auto& leaf: best_leafs) {
             weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
         }
         for(uint32_t i = 0; i < best_depth; ++ i) {

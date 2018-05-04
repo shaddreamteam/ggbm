@@ -46,7 +46,6 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
     std::vector<std::vector<bin_id>> transform_result;
     bin_upper_bounds_.resize(feature_values.size());
 
-    int32_t j = 0;
     auto find_bin_vector = [&feature_values, this](int32_t j) {
         auto feature_vector = feature_values[j]; // copy to sort
         std::sort(feature_vector.begin(), feature_vector.end());
@@ -65,7 +64,7 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
     };
 
     TaskQueue<decltype(find_bin_vector), int32_t> task_queue(thread_count_, &find_bin_vector);
-    for (j = 0; j < feature_values.size(); ++j) {
+    for (int32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
     task_queue.Run();
@@ -82,7 +81,6 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
     std::vector<std::vector<bin_id>> transform_res;
     transform_res.resize(feature_values.size());
 
-    int32_t j = 0;
     auto transform_vector = [&feature_values, &transform_res, this](int32_t j) {
         transform_res[j].reserve(feature_values[j].size());
         for (auto value: feature_values[j]) {
@@ -94,7 +92,7 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
     };
 
     TaskQueue<decltype(transform_vector), int32_t> task_queue(thread_count_, &transform_vector);
-    for (j = 0; j < feature_values.size(); ++j) {
+    for (int32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
     task_queue.Run();

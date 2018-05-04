@@ -12,12 +12,20 @@ class Tree {
 public:
 
 	// constructor to test predict with given weights
-    Tree(uint32_t max_depth, std::vector<float_type> weights, std::vector<std::tuple<uint32_t, bin_id>> splits)
-      : initialized_(true), max_depth_(max_depth), depth_(max_depth),
-        weights_(weights), splits_(splits) {};
+    Tree(uint32_t max_depth,
+         std::vector<float_type> weights,
+         std::vector<std::tuple<uint32_t, bin_id>> splits,
+         uint32_t thread_count) : initialized_(true),
+                                  max_depth_(max_depth),
+                                  depth_(max_depth),
+                                  splits_(std::move(splits)),
+                                  weights_(std::move(weights)),
+                                  thread_count_(thread_count) {};
 
 
-    Tree(uint32_t max_depth) : initialized_(false), max_depth_(max_depth) {};
+    Tree(uint32_t max_depth, uint32_t thread_count) : initialized_(false),
+                                                      max_depth_(max_depth),
+                                                      thread_count_(thread_count) {};
     void Construct(std::shared_ptr<const TrainDataset> dataset, 
                    std::shared_ptr<const OptData> optData, 
                    float_type lambda_l2_reg,
@@ -36,6 +44,7 @@ private:
     uint32_t depth_ = 0;
     std::vector<std::tuple<uint32_t, bin_id>> splits_;
     std::vector<float_type> weights_;
+    uint32_t thread_count_;
 
     std::tuple<float, std::vector<float_type>> GetSplitResult(uint32_t feature_number);
 };
