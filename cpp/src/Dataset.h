@@ -12,7 +12,7 @@
 class Dataset {
 public:
     bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
-    uint32_t GetNRows() const;
+    uint32_t GetRowCount() const;
     uint32_t GetFeatureCount() const;
 
 //    std::vector<std::vector<float_type>> Test(const std::string& filename) {

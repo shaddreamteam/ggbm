@@ -7,7 +7,7 @@ bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
     return feature_bin_ids_[feature_number][row_number];
 }
 
-uint32_t Dataset::GetNRows() const {
+uint32_t Dataset::GetRowCount() const {
     return feature_bin_ids_.at(0).size();
 }
 

@@ -8,7 +8,7 @@ void GGBM::Train(const std::shared_ptr<const TrainDataset> trainDataset,
     learning_rate_ = learning_rate;
 
     base_prediction_ = loss.GetFirstPrediction(*trainDataset);
-    std::vector<float_type> predictions(trainDataset->GetNRows(), base_prediction_);
+    std::vector<float_type> predictions(trainDataset->GetRowCount(), base_prediction_);
     std::shared_ptr<OptData> optDataset = std::make_shared<OptData>(
             *trainDataset, predictions, loss);
 
@@ -26,7 +26,7 @@ void GGBM::Train(const std::shared_ptr<const TrainDataset> trainDataset,
 }
 
 std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
-    std::vector<float_type> predictions(dataset.GetNRows(), base_prediction_);
+    std::vector<float_type> predictions(dataset.GetRowCount(), base_prediction_);
     for(const Tree& tree : trees_) {
         std::vector<float_type> treePredictions = tree.PredictFromDataset(dataset);
         for(uint32_t i = 0; i < predictions.size(); ++i) {

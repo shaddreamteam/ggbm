@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 //    MSE loss;
 //
 //    float_type first_prediction = loss.GetFirstPrediction(*dataset);
-//    std::vector<float_type> predictions(dataset->GetNRows(), first_prediction);
+//    std::vector<float_type> predictions(dataset->GetRowCount(), first_prediction);
 //
 //    std::shared_ptr<OptData> optData_p = std::make_shared<OptData>(*dataset,
 //            predictions, loss);

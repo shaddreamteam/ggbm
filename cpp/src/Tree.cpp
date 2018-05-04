@@ -27,17 +27,17 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
                      uint32_t min_subsample) {
     std::vector<uint32_t> indexes;
     // Here we should check that row_sampling in (0, 1]
-    // and min_subsample <= dataset-GetNRows
+    // and min_subsample <= dataset-GetRowCount
     if(row_sampling >= 1 - EPS) {
-        indexes = std::vector<uint32_t>(dataset->GetNRows());
+        indexes = std::vector<uint32_t>(dataset->GetRowCount());
         std::iota(indexes.begin(), indexes.end(), 0);
     } else {
         float_type sampling_coef = std::max(row_sampling,
-                float(min_subsample) / dataset->GetNRows());
+                float(min_subsample) / dataset->GetRowCount());
         std::random_device rd;
         std::mt19937 generator(rd());
         std::uniform_real_distribution<double> distribution(0.0,1.0);
-        for(uint32_t i = 0; i < dataset->GetNRows(); ++i) {
+        for(uint32_t i = 0; i < dataset->GetRowCount(); ++i) {
             if(distribution(generator) < sampling_coef) {
                 indexes.push_back(i);
             }
@@ -143,9 +143,9 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
 
 std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     std::vector<float_type> predictions;
-    predictions.reserve(dataset.GetNRows());
+    predictions.reserve(dataset.GetRowCount());
 
-    for(uint32_t object_index = 0; object_index < dataset.GetNRows(); ++object_index) {
+    for(uint32_t object_index = 0; object_index < dataset.GetRowCount(); ++object_index) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
             if(dataset.GetFeature(object_index, std::get<0>(split)) <= std::get<1>(split)) {
