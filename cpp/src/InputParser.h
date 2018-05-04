@@ -8,16 +8,13 @@
 
 #include <iostream>
 
-class InputParser{
-    // parse commands like ./cpp filename=train.csv learning_rate=0.2
+class Config{
     public:
-        InputParser() {};
-        // InputParser(int &argc, char **argv);
-        InputParser(int &argc, char **argv){
-            for (int i = 1; i < argc; ++i) {
-                ParseToken(std::string(argv[i]));
-            }
-        };
+        friend class InputParser;
+
+        Config() {};
+        Config(const Config&) = default;
+        
         const std::string GetFilename() { return params_["filename"]; }
         const float_type GetLearningRate() { return std::stod(params_["learning_rate"]); }
         const float_type GetNEstimators() { return std::stod(params_["n_estimators"]); }
@@ -27,16 +24,7 @@ class InputParser{
         const float_type GetRowSampling() { return std::stod(params_["row_sampling"]); }
         const float_type GetMinSubsample() { return std::stod(params_["min_subsample"]); }
         const uint32_t GetNThreads() { return std::stoi(params_["n_threads"]); }
-
-
     private:
-        // void ParseToken(const std::string& token);
-        void ParseToken(const std::string& token) {
-            auto pos = token.find('=');
-            params_[token.substr(0, pos)] = token.substr(pos+1);
-        }
-
-        // default parameters
         std::unordered_map<std::string, std::string> params_={
             {"filename", "\0"},
             {"learning_rate", "0.1"},
@@ -48,6 +36,28 @@ class InputParser{
             {"min_subsample", "1"},
             {"n_threads", "1"},
         };
+};
+
+class InputParser{
+    // parse commands like ./cpp filename=train.csv learning_rate=0.2
+    public:
+        InputParser() {};
+        // InputParser(int &argc, char **argv);
+        InputParser(int &argc, char **argv){
+            for (int i = 1; i < argc; ++i) {
+                ParseToken(std::string(argv[i]));
+            }
+        };
+
+        Config config;
+
+    private:
+        // void ParseToken(const std::string& token);
+        void ParseToken(const std::string& token) {
+            auto pos = token.find('=');
+            config.params_[token.substr(0, pos)] = token.substr(pos+1);
+        }
+
 };
 
 #endif //CPP_INPUTPARSER_H
