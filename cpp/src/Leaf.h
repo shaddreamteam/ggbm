@@ -12,11 +12,13 @@
 class Histogram {
 public:
     Histogram(std::vector<float_type> gradient_cs, std::vector<float_type> hessian_cs,
-              std::vector<uint32_t> row_count_cs, float_type lambda_l2_reg) :
+              std::vector<uint32_t> row_count_cs, float_type lambda_l2_reg,
+              bool empty_leaf) :
         gradient_cs_(gradient_cs),
         hessian_cs_(hessian_cs),
         row_count_cs_(row_count_cs),
-        lambda_l2_reg_(lambda_l2_reg) {};
+        lambda_l2_reg_(lambda_l2_reg),
+        empty_leaf_(empty_leaf) {};
 
     float_type CalculateSplitGain(bin_id bin_number) const;
     std::tuple<float_type, float_type> CalculateSplitWeights(bin_id bin_number) const;
@@ -26,6 +28,7 @@ private:
     std::vector<float_type> hessian_cs_;
     std::vector<uint32_t> row_count_cs_;
     float_type lambda_l2_reg_;
+    bool empty_leaf_;
 
     float_type CalculateGain(float_type gradient, float_type hessian, 
                                          uint32_t row_count) const;

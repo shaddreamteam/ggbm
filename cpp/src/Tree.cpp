@@ -1,7 +1,5 @@
 #include <algorithm>
 #include <cmath>
-//#include <function>
-//#include <functional>
 #include <tuple>
 #include <vector>
 #include <random>
@@ -44,14 +42,9 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         }
     }
 
-    std::vector<std::tuple<uint32_t, bin_id>> splits;
     std::vector<Leaf> leafs = {Leaf(0, 0, indexes, dataset, optData)};;
-    std::vector<Leaf> best_leafs = leafs;
-    uint32_t best_depth = 0;
-    float_type best_gain = 0;
 
-    for(uint32_t depth = 0; depth < max_depth_; ++depth) {
-        float_type prev_gain = best_gain;
+    for(depth_ = 0; depth_ < max_depth_; ++depth_) {
         std::vector<SearchParameters> split_params(dataset->GetFeatureCount());
 
         auto find_split = [&dataset, &leafs, &split_params,
@@ -91,9 +84,8 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         task_queue.Run();
 
         uint32_t best_feature = 0;
-        best_gain = split_params[0].gain;
-
-        for (uint32_t i = 1; i < split_params.size(); ++i) {
+        float_type best_gain = 0;
+        for (uint32_t i = 0; i < split_params.size(); ++i) {
             if (split_params[i].gain < best_gain) {
                 best_feature = i;
                 best_gain = split_params[i].gain;
@@ -102,7 +94,7 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         auto best_params = split_params[best_feature];
         split_params.clear();
 
-        splits.push_back(std::make_tuple(best_feature, best_params.bin));
+        splits_.push_back(std::make_tuple(best_feature, best_params.bin));
         Leaf left, right;
         std::vector<Leaf> new_leafs;
         for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
@@ -111,32 +103,17 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
                                                   best_params.bin,
                                                   best_params.left_weigths[leaf_number],
                                                   best_params.right_weights[leaf_number]);
-            if(!left.IsEmpty()) {
-                new_leafs.push_back(left);
-            }
-            if(!right.IsEmpty()) {
-                new_leafs.push_back(right);
-            }
+            new_leafs.push_back(left);
+            new_leafs.push_back(right);
         }
         leafs = new_leafs;
-
-        if(best_gain < prev_gain - EPS) {
-            best_leafs = new_leafs;
-            best_depth = depth + 1;
-        }
     }
     
-    if(best_depth > 0) {
-        depth_ = best_depth;
-        weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
-        initialized_ = true;
+    weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
+    initialized_ = true;
 
-        for(const auto& leaf: best_leafs) {
-            weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
-        }
-        for(uint32_t i = 0; i < best_depth; ++ i) {
-            splits_.push_back(splits[i]);
-        }
+    for(const auto& leaf: leafs) {
+        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
     }
 }
 
