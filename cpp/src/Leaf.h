@@ -12,11 +12,9 @@
 class Histogram {
 public:
     Histogram(std::vector<float_type> gradient_cs, std::vector<float_type> hessian_cs,
-              std::vector<uint32_t> row_count_cs, float_type lambda_l2_reg,
-              bool empty_leaf) :
+              float_type lambda_l2_reg, bool empty_leaf) :
         gradient_cs_(gradient_cs),
         hessian_cs_(hessian_cs),
-        row_count_cs_(row_count_cs),
         lambda_l2_reg_(lambda_l2_reg),
         empty_leaf_(empty_leaf) {};
 
@@ -30,10 +28,8 @@ private:
     float_type lambda_l2_reg_;
     bool empty_leaf_;
 
-    float_type CalculateGain(float_type gradient, float_type hessian, 
-                                         uint32_t row_count) const;
-    float_type CalculateWeight(float_type gradient, float_type hessian, 
-                                          uint32_t row_count) const;
+    float_type CalculateGain(float_type gradient, float_type hessian) const;
+    float_type CalculateWeight(float_type gradient, float_type hessian) const;
 };
 
 class Leaf {
