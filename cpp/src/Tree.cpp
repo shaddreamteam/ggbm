@@ -42,7 +42,7 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         }
     }
 
-    std::vector<Leaf> leafs = {Leaf(0, 0, indexes, dataset, optData)};;
+    std::vector<Leaf> leafs = {Leaf(0, 0, indexes, dataset, optData)};
 
     for(depth_ = 0; depth_ < max_depth_; ++depth_) {
         std::vector<SearchParameters> split_params(dataset->GetFeatureCount());
@@ -98,13 +98,14 @@ void Tree::Construct(std::shared_ptr<const TrainDataset> dataset,
         Leaf left, right;
         std::vector<Leaf> new_leafs;
         for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
-            std::tie(left, right) =
-                    leafs[leaf_number].MakeChilds(best_feature,
-                                                  best_params.bin,
-                                                  best_params.left_weigths[leaf_number],
-                                                  best_params.right_weights[leaf_number]);
-            new_leafs.push_back(left);
-            new_leafs.push_back(right);
+            const Leaf& leaf = leafs[leaf_number];
+            float_type child_weight = best_params.left_weigths[leaf_number];
+            new_leafs.push_back(leaf.MakeChild(
+                true, best_feature, best_params.bin, child_weight));
+
+            child_weight = best_params.right_weights[leaf_number];
+            new_leafs.push_back(leaf.MakeChild(
+                false, best_feature, best_params.bin, child_weight));
         }
         leafs = new_leafs;
     }
