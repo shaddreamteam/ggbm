@@ -91,6 +91,11 @@ uint32_t TrainDataset::GetBinCount(uint32_t feature_number) const {
     return bin_counts_[feature_number];
 }
 
+const std::vector<bin_id>& TrainDataset::GetFeatureVector(
+        uint32_t feature_number) const {
+    return feature_bin_ids_.at(feature_number);
+}
+
 TestDataset::TestDataset(const std::string& filename,
                          const FeatureTransformer& ft, bool fileHasTarget) {
     std::vector<std::vector<float_type>> data_x;

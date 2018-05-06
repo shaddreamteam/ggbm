@@ -95,8 +95,7 @@ int main(int argc, char **argv) {
 //
 
     FeatureTransformer ft(2);
-    std::shared_ptr<const TrainDataset> dataset = 
-        std::make_shared<const TrainDataset>("../../shitty_python_prototypes/train.csv", ft);
+    TrainDataset dataset("../../shitty_python_prototypes/train.csv", ft);
     MSE loss;
     GGBM ggbm(1);
     ggbm.Train(dataset, loss, 

@@ -58,36 +58,40 @@ std::tuple<float_type, float_type> Histogram::CalculateSplitWeights(
 }
 
 Histogram Leaf::GetHistogram(uint32_t feature_number,
-                             float_type lambda_l2_reg) const {
+                             float_type lambda_l2_reg,
+                             uint32_t bin_count,
+                             const std::vector<bin_id>& feature_vector,
+                             const std::vector<float_type>& gradients,
+                             const std::vector<float_type>& hessians) const {
     if(row_indexes_.empty()) {
         return Histogram(std::vector<float_type>(0),
                          std::vector<float_type>(0),
                          lambda_l2_reg, true);
     }
-    std::vector<float_type> gradients(dataset_->GetBinCount(feature_number), 0);
-    std::vector<float_type> hessians(dataset_->GetBinCount(feature_number), 0);
+    std::vector<float_type> gradient_sum(bin_count, 0);
+    std::vector<float_type> hessian_sum(bin_count, 0);
     for(uint32_t index : row_indexes_) {
-        bin_id bin_number = dataset_->GetFeature(index, feature_number);
-        gradients[bin_number] += opt_data_->GetGradient(index);
-        hessians[bin_number] += opt_data_->GetHessian(index);
+        bin_id bin_number = feature_vector[index];
+        gradient_sum[bin_number] += gradients[index];
+        hessian_sum[bin_number] += hessians[index];
     }
-    for(uint32_t i = 1; i < dataset_->GetBinCount(feature_number); ++i) {
-        gradients[i] += gradients[i - 1];
-        hessians[i] += hessians[i - 1];
+    for(uint32_t i = 1; i < bin_count; ++i) {
+        gradient_sum[i] += gradient_sum[i - 1];
+        hessian_sum[i] += hessian_sum[i - 1];
     }
-    return Histogram(gradients, hessians, lambda_l2_reg, false);
+    return Histogram(gradient_sum, hessian_sum, lambda_l2_reg, false);
 }
 
-Leaf Leaf::MakeChild(bool is_left, uint32_t feature_number,
+Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
                      bin_id bin_number, float_type weight) const {
     std::vector<uint32_t> child_rows(0);
     for(uint32_t index : row_indexes_) {
-        bool belongs_left = dataset_->GetFeature(index, feature_number) 
-            <= bin_number;
+        bool belongs_left = feature_vector[index] <= bin_number;
         if(belongs_left && is_left || !belongs_left && !is_left) {
             child_rows.push_back(index);
         }
     }
+
     if(child_rows.empty()) {
         weight = weight_;
     }
@@ -99,7 +103,7 @@ Leaf Leaf::MakeChild(bool is_left, uint32_t feature_number,
         child_index = leaf_index_ * 2 + 2;
     }
 
-    Leaf child(child_index, weight, child_rows, dataset_, opt_data_);
+    Leaf child(child_index, weight, child_rows);
     return child;
 }
 

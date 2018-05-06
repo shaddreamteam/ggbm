@@ -13,7 +13,7 @@
 class GGBM {
 public:
     GGBM(uint32_t thread_count): thread_count_(thread_count) {};
-    void Train(const std::shared_ptr<const TrainDataset> trainData, const Loss& loss,
+    void Train(const TrainDataset& trainData, const Loss& loss,
             uint32_t depth, uint32_t n_estimators, float_type lambda_l2_reg,
             float_type learning_rate, float_type row_sampling,
             uint32_t min_subsample);

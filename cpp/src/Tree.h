@@ -26,8 +26,9 @@ public:
     Tree(uint32_t max_depth, uint32_t thread_count) : initialized_(false),
                                                       max_depth_(max_depth),
                                                       thread_count_(thread_count) {};
-    void Construct(std::shared_ptr<const TrainDataset> dataset, 
-                   std::shared_ptr<const OptData> optData, 
+    void Construct(const TrainDataset& dataset, 
+                   const std::vector<float_type>& gradients,
+                   const std::vector<float_type>& hessians,
                    float_type lambda_l2_reg,
                    float_type row_sampling,
                    uint32_t min_subsample);

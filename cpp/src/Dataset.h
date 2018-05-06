@@ -37,6 +37,7 @@ public:
     TrainDataset(const std::string& filename, FeatureTransformer& f);
     float_type GetTarget(uint32_t row_number) const;
     uint32_t GetBinCount(uint32_t feature_number) const;
+    const std::vector<bin_id>& GetFeatureVector(uint32_t feature_number) const;
 
 private:
     std::vector<float_type> targets_;
