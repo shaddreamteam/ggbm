@@ -68,7 +68,7 @@ std::vector<float_type> LogLoss::GetGradients(
     check_correct_input(dataset, predictions);
     std::vector<float_type> gradients(dataset.GetRowCount());
     for(uint32_t i = 0; i < dataset.GetRowCount(); ++i) {
-        gradients[i] = (dataset.GetTarget(i) - Sigmoid(predictions[i])) /
+        gradients[i] = -(dataset.GetTarget(i) - Sigmoid(predictions[i])) /
             dataset.GetRowCount();
     }
     return gradients;
