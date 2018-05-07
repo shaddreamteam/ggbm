@@ -49,23 +49,25 @@ void Tree::Construct(const TrainDataset& dataset,
         std::vector<SearchParameters> split_params(dataset.GetFeatureCount());
 
         auto find_split = [&dataset, &leafs, &split_params,
-                lambda_l2_reg, gradients, hessians, this](int32_t feature_number) {
+                lambda_l2_reg, &gradients, &hessians, this](int32_t feature_number) {
             const std::vector<bin_id>& feature_vector = 
                 dataset.GetFeatureVector(feature_number);
             uint32_t bin_count = dataset.GetBinCount(feature_number);
             SearchParameters search_parameters;
+
+            std::vector<Histogram> histograms;
+            for(const Leaf& leaf : leafs) {
+                histograms.push_back(leaf.GetHistogram(feature_number,
+                                                       lambda_l2_reg,
+                                                       bin_count,
+                                                       feature_vector,
+                                                       gradients,
+                                                       hessians));
+            }
+
             for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
                 float_type gain = 0;
                 std::vector<float_type> left_weigths(leafs.size()), right_weigts(leafs.size());
-                std::vector<Histogram> histograms;
-                for(const Leaf& leaf : leafs) {
-                    histograms.push_back(leaf.GetHistogram(feature_number,
-                                                           lambda_l2_reg,
-                                                           bin_count,
-                                                           feature_vector,
-                                                           gradients,
-                                                           hessians));
-                }
                 for(uint32_t hist_number = 0; hist_number < histograms.size(); ++hist_number) {
                     gain += histograms[hist_number].CalculateSplitGain(bin_number);
                     std::tie(left_weigths[hist_number],
