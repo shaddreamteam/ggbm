@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
     FeatureTransformer ft(2);
     TrainDataset dataset("../../shitty_python_prototypes/train.csv", ft);
     MSE loss;
-    GGBM ggbm(1);
+    GGBM ggbm(1, kMse);
     ggbm.Train(dataset, loss, 
                2, //depth
                1, //nuber of trees

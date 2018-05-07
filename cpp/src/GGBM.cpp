@@ -35,5 +35,10 @@ std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
             predictions[i] += treePredictions[i] * learning_rate_;
         }
     }
+    if(objective_ == kLogLoss) {
+        for(float_type& p : predictions) {
+            p = Sigmoid(p);
+        }
+    }
     return predictions;
 }
