@@ -12,13 +12,11 @@ void GGBM::Train(const Config& config, const TrainDataset& trainDataset,
 
     for(uint32_t tree_number = 0; tree_number < config.GetNEstimators();
             ++tree_number) {
-        Tree tree(config.GetDepth(), thread_count_);
-        tree.Construct(trainDataset,
+        Tree tree;
+        tree.Construct(config,
+                       trainDataset,
                        optDataset.GetGradients(), 
-                       optDataset.GetHessians(),
-                       config.GetLambdaL2(), 
-                       config.GetRowSampling(),
-                       config.GetMinSubsample());
+                       optDataset.GetHessians());
 
         if(tree.IsInitialized()) {
             trees_.push_back(tree);

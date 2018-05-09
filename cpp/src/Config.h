@@ -2,6 +2,7 @@
 #define CPP_CONFIG_H
 
 #include <unordered_map>
+#include "Base.h"
 
 
 class Config{
