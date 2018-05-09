@@ -82,24 +82,9 @@ void Tree::Construct(const Config& config,
 
         auto best_params = split_params[best_feature];
         split_params.clear();
-
         splits_.push_back(std::make_tuple(best_feature, best_params.bin));
-        Leaf left, right;
-        std::vector<Leaf> new_leafs;
-        const std::vector<bin_id>& feature_vector = 
-            dataset.GetFeatureVector(best_feature);
-        for(uint32_t leaf_number = 0; leaf_number < leafs.size();
-				++leaf_number) {
-            const Leaf& leaf = leafs[leaf_number];
-            float_type child_weight = best_params.left_weigths[leaf_number];
-            new_leafs.push_back(leaf.MakeChild(
-                true, feature_vector, best_params.bin, child_weight));
-
-            child_weight = best_params.right_weights[leaf_number];
-            new_leafs.push_back(leaf.MakeChild(
-                false, feature_vector, best_params.bin, child_weight));
-        }
-        leafs = new_leafs;
+        leafs = MakeNewLeafs(dataset.GetFeatureVector(best_feature),
+                             leafs, best_params);
     }
     
     weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
@@ -115,10 +100,13 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     std::vector<float_type> predictions;
     predictions.reserve(dataset.GetRowCount());
 
-    for(uint32_t object_index = 0; object_index < dataset.GetRowCount(); ++object_index) {
+    for(uint32_t row_number = 0; row_number < dataset.GetRowCount(); ++row_number) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
-            if(dataset.GetFeature(object_index, std::get<0>(split)) <= std::get<1>(split)) {
+            uint32_t feautre_number = std::get<0>(split);
+            bin_id split_bin = std::get<1>(split);
+            float_type feautre = dataset.GetFeature(row_number, feautre_number);
+            if(feautre <= split_bin) {
                 list_index = list_index * 2 + 1;
             } else {
                 list_index = list_index * 2 + 2;
@@ -162,4 +150,22 @@ std::vector<uint32_t> Tree::SampleRows(const Config& config,
         }
     }
     return row_indexes;
+}
+
+std::vector<Leaf> Tree::MakeNewLeafs(std::vector<bin_id> feature_vector,
+                                     const std::vector<Leaf>& leafs,
+                                     const SearchParameters& best_params) {
+    Leaf left, right;
+    std::vector<Leaf> new_leafs;
+    for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
+        const Leaf& leaf = leafs[leaf_number];
+        float_type child_weight = best_params.left_weigths[leaf_number];
+        new_leafs.push_back(leaf.MakeChild(
+            true, feature_vector, best_params.bin, child_weight));
+
+        child_weight = best_params.right_weights[leaf_number];
+        new_leafs.push_back(leaf.MakeChild(
+            false, feature_vector, best_params.bin, child_weight));
+    }
+    return new_leafs;
 }

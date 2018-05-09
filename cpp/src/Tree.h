@@ -42,6 +42,9 @@ private:
 
     std::vector<uint32_t> SampleRows(const Config& config,
                                      uint32_t n_rows) const;
+    std::vector<Leaf> MakeNewLeafs(std::vector<bin_id> feature_vector,
+                                   const std::vector<Leaf>& leafs,
+                                   const SearchParameters& best_params);
 };
 
 #endif //CPP_TREE_H
