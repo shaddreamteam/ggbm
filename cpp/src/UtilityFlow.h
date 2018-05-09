@@ -16,11 +16,6 @@ public:
         InputParser parser(argc, argv);
         Config cfg(parser.config);
 
-
-        std::cerr << cfg.GetModelFilename() << " " <<
-            cfg.GetModelFilename().size() << "\n";
-        std::cerr << cfg.GetTrainFilename() << " " <<
-            cfg.GetModelFilename().size() << "\n";
         if(cfg.GetModelFilename().size() == 0) {
             FeatureTransformer ft(cfg.GetThreads());
             TrainDataset dataset(cfg.GetTrainFilename(), ft);

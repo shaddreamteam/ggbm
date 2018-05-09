@@ -42,14 +42,6 @@ private:
 
     std::vector<uint32_t> SampleRows(const Config& config,
                                      uint32_t n_rows) const;
-    void CalculateSplitParameters(
-        const Config& config,
-        const TrainDataset& dataset,
-        const std::vector<Leaf>& leafs, 
-        const std::vector<float_type>& gradients,
-        const std::vector<float_type>& hessians,
-        uint32_t feature_number,
-        std::vector<SearchParameters>* split_params);
 };
 
 #endif //CPP_TREE_H
