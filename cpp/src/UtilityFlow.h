@@ -1,6 +1,9 @@
 #ifndef CPP_UTILITYFLOW_H
 #define CPP_UTILITYFLOW_H
 
+
+#include <unordered_map>
+
 #include "GGBM.h"
 #include "InputParser.h"
 
@@ -14,12 +17,16 @@ public:
         Config cfg(parser.config);
 
 
+        std::cerr << cfg.GetModelFilename() << " " <<
+            cfg.GetModelFilename().size() << "\n";
+        std::cerr << cfg.GetTrainFilename() << " " <<
+            cfg.GetModelFilename().size() << "\n";
         if(cfg.GetModelFilename().size() == 0) {
-            GGBM ggbm(cfg);
             FeatureTransformer ft(cfg.GetThreads());
             TrainDataset dataset(cfg.GetTrainFilename(), ft);
+            GGBM ggbm(cfg, ft);
             MSE loss;
-            ggbm.Train(dataset, loss);
+            ggbm.Train(cfg, dataset, loss);
             // save model
             PredictionFlow(cfg, ft, ggbm);
         } else {

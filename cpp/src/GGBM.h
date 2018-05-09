@@ -9,36 +9,27 @@
 #include "OptData.h"
 #include "Tree.h"
 #include "Config.h"
+#include "FeatureTransformer.h"
 
 
 class GGBM {
 public:
-    GGBM(uint32_t thread_count, ObjectiveType objective): 
-        thread_count_(thread_count), objective_(objective) {};
-    GGBM(Config& config): 
-        config_(config),
+    GGBM(Config& config, FeatureTransformer feature_transformer): 
         thread_count_(config.GetThreads()),
-        objective_(config.GetObjective()) {};
-    void Train(
-            const TrainDataset& trainData,
-            const Loss& loss,
-            uint32_t depth,
-            uint32_t n_estimators,
-            float_type lambda_l2_reg,
-            float_type learning_rate, 
-            float_type row_sampling,
-            uint32_t min_subsample);
+        objective_(config.GetObjective()),
+        feature_transformer_(feature_transformer) {};
 
-    void Train(const TrainDataset& trainDataset, const Loss& loss);
+    void Train(const Config& config, const TrainDataset& trainDataset,
+               const Loss& loss);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
+
 private:
     uint32_t thread_count_;
     float_type base_prediction_;
     float_type learning_rate_;
     std::vector<Tree> trees_;
     ObjectiveType objective_;
-
-    Config config_;
+    FeatureTransformer feature_transformer_;
 };
 #endif //CPP_GGBM_H

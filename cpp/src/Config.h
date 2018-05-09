@@ -12,18 +12,18 @@ class Config{
         Config() {};
         Config(const Config&) = default;
         
-        const std::string GetModelFilename() { return params_["filename_model"]; }
-        const std::string GetTrainFilename() { return params_["filename_train"]; }
-        const std::string GetTestFilename() { return params_["filename_test"]; }
-        const uint32_t GetThreads() { return std::stoi(params_["threads"]); }
-        const std::string GetLoss() { return params_["loss"]; }
-        const ObjectiveType GetObjective() { return obj_dict_[params_["objective"]]; }
-        const float_type GetLearningRate() { return std::stod(params_["learning_rate"]); }
-        const float_type GetNEstimators() { return std::stod(params_["n_estimators"]); }
-        const uint32_t GetDepth() { return std::stoi(params_["depth"]); }
-        const float_type GetLambdaL2() { return std::stod(params_["lambda"]); }
-        const float_type GetRowSampling() { return std::stod(params_["row_sampling"]); }
-        const uint32_t GetMinSubsample() { return std::stoi(params_["min_subsample"]); }
+        const std::string GetModelFilename() const { return params_.at("filename_model"); }
+        const std::string GetTrainFilename() const { return params_.at("filename_train"); }
+        const std::string GetTestFilename() const { return params_.at("filename_test"); }
+        const uint32_t GetThreads() const { return std::stoi(params_.at("threads")); }
+        const std::string GetLoss() const { return params_.at("loss"); }
+        const ObjectiveType GetObjective() const { return obj_dict_.at(params_.at("objective")); }
+        const float_type GetLearningRate() const { return std::stod(params_.at("learning_rate")); }
+        const float_type GetNEstimators() const { return std::stod(params_.at("n_estimators")); }
+        const uint32_t GetDepth() const { return std::stoi(params_.at("depth")); }
+        const float_type GetLambdaL2() const { return std::stod(params_.at("lambda")); }
+        const float_type GetRowSampling() const { return std::stod(params_.at("row_sampling")); }
+        const uint32_t GetMinSubsample() const { return std::stoi(params_.at("min_subsample")); }
     private:
         std::unordered_map<std::string, std::string> params_={
             {"filename_model", "\0"},
