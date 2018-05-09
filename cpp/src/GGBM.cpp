@@ -27,6 +27,14 @@ void GGBM::Train(const TrainDataset& trainDataset,
     }
 }
 
+void GGBM::Train(const TrainDataset& trainDataset, const Loss& loss) {
+	Train(trainDataset,
+        loss,
+        config_.GetDepth(), config_.GetNEstimators(),
+        config_.GetLambdaL2(), config_.GetLearningRate(),
+        config_.GetRowSampling(), config_.GetMinSubsample());
+}
+
 std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
     std::vector<float_type> predictions(dataset.GetRowCount(), base_prediction_);
     for(const Tree& tree : trees_) {

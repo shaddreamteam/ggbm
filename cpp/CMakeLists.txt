@@ -14,6 +14,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 find_package (Threads)
 
-set(SOURCE_FILES main.cpp src/Leaf.cpp src/Leaf.h src/TaskQueue.cpp src/TaskQueue.h src/GGBM.cpp src/GGBM.h src/Tree.cpp src/Tree.h src/Dataset.cpp src/Dataset.h src/Base.h src/FeatureTransformer.cpp src/FeatureTransformer.h src/dataset_stub.h src/Loss.h src/Loss.cpp src/OptData.h src/OptData.cpp src/InputParser.h src/InputParser.cpp)
+set(SOURCE_FILES main.cpp src/Leaf.cpp src/Leaf.h src/TaskQueue.cpp src/TaskQueue.h src/GGBM.cpp src/GGBM.h src/Tree.cpp src/Tree.h src/Dataset.cpp src/Dataset.h src/Base.h src/FeatureTransformer.cpp src/FeatureTransformer.h src/dataset_stub.h src/Loss.h src/Loss.cpp src/OptData.h src/OptData.cpp src/InputParser.h src/InputParser.cpp src/Config.h src/UtilityFlow.h)
 add_executable(cpp ${SOURCE_FILES})
 target_link_libraries (cpp ${CMAKE_THREAD_LIBS_INIT})

@@ -4,32 +4,10 @@
 #include "src/Tree.h"
 #include "src/GGBM.h"
 #include "src/InputParser.h"
-#include "src/InputParser.cpp"
+// #include "src/InputParser.cpp"
+#include "src/UtilityFlow.h"
 
 int main(int argc, char **argv) {
-
-    // uint32_t depth=2;
-    // std::cout << "depth=" << depth << std::endl;
-    // std::vector<float_type> test_weights={10,20,30,40};
-
-    // for (auto& s: test_weights) {
-    //     std::cout << s << ' ';
-    // }
-    // std::cout << std::endl;
-    
-    // std::vector<std::tuple<uint32_t, bin_id>> test_splits={};
-    // test_splits.push_back(std::make_tuple(0,2));
-    // test_splits.push_back(std::make_tuple(1,2));
-    // for (auto& s: test_splits) {
-    //     std::cout << std::get<0>(s) << ' ' << std::get<1>(s) << std::endl;
-    // }
-
-    // Tree tree(depth, test_weights, test_splits);
-
-    // std::vector<std::vector<bin_id>> x_test_bins={
-    //     {1, 1, 3, 3},
-    //     {1, 3, 1, 3},
-    // };
 
     // auto preds = tree.PredictFromBins(x_test_bins);
 
@@ -94,21 +72,29 @@ int main(int argc, char **argv) {
 //    std::cout << std::endl;
 //
 
-    FeatureTransformer ft(2);
-    TrainDataset dataset("../../shitty_python_prototypes/train.csv", ft);
-    MSE loss;
-    GGBM ggbm(1, kMse);
-    ggbm.Train(dataset, loss, 
-               2, //depth
-               1, //nuber of trees
-               0.0, //l2 regularizatoin
-               1, // learnin rate
-               1, // subsampling rate
-               1); // min sample size
-    TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
-    auto preds = ggbm.PredictFromDataset(test);
-    for(int i = 0; i < preds.size() && i < 100; ++i) {
-        std::cout << preds[i] << ' ';
-    }
+    // FeatureTransformer ft(2);
+    // TrainDataset dataset("../../shitty_python_prototypes/train.csv", ft);
+    // MSE loss;
+    // GGBM ggbm(1, kMse);
+    // ggbm.Train(dataset, loss, 
+    //            2, //depth
+    //            1, //nuber of trees
+    //            0.0, //l2 regularizatoin
+    //            1, // learnin rate
+    //            1, // subsampling rate
+    //            1); // min sample size
+    // TestDataset test("../../shitty_python_prototypes/test.csv", ft, false);
+    // auto preds = ggbm.PredictFromDataset(test);
+    // for(int i = 0; i < preds.size() && i < 100; ++i) {
+    //     std::cout << preds[i] << ' ';
+    // }
+
+
+
+
+    // ./cpp filename_train=../../shitty_python_prototypes/train.csv filename_test=../../shitty_python_prototypes/test.csv threads=2 loss=mse objective=mse learning_rate=1 depth=2 n_estimators=1 lambda=0 row_subsampling=1 min_subsample=1
+    UtilityFlow uf;
+    uf.Start(argc, argv);
+
     return 0;
 }

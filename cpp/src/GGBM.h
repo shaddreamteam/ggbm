@@ -8,16 +8,17 @@
 #include "Loss.h"
 #include "OptData.h"
 #include "Tree.h"
+#include "Config.h"
 
-enum ObjectiveType {
-    kMse,
-    kLogLoss,
-};
 
 class GGBM {
 public:
     GGBM(uint32_t thread_count, ObjectiveType objective): 
         thread_count_(thread_count), objective_(objective) {};
+    GGBM(Config& config): 
+        config_(config),
+        thread_count_(config.GetThreads()),
+        objective_(config.GetObjective()) {};
     void Train(
             const TrainDataset& trainData,
             const Loss& loss,
@@ -28,6 +29,8 @@ public:
             float_type row_sampling,
             uint32_t min_subsample);
 
+    void Train(const TrainDataset& trainDataset, const Loss& loss);
+
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
 private:
     uint32_t thread_count_;
@@ -35,5 +38,7 @@ private:
     float_type learning_rate_;
     std::vector<Tree> trees_;
     ObjectiveType objective_;
+
+    Config config_;
 };
 #endif //CPP_GGBM_H
