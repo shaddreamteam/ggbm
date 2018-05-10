@@ -32,17 +32,10 @@ public:
     }
 
 private:
-<<<<<<< HEAD
-    void PredictionFlow(Config& cfg, const FeatureTransformer& ft,
-                        GGBM& boosting) {
-        TestDataset test(cfg.GetTestFilename(), ft, false);
-        auto preds = boosting.PredictFromDataset(test);
-=======
     void PredictionFlow(Config& cfg,
                         GGBM* ggbm) {
         TestDataset test(cfg.GetTestFilename(), ggbm->GetFeatureTransformer(), false);
         auto preds = ggbm->PredictFromDataset(test);
->>>>>>> ebb432260c01b96f3747bad7414aca6954b73fd4
         // save predictions
         for(int i = 0; i < preds.size() && i < 100; ++i) {
             std::cout << preds[i] << ' ';
