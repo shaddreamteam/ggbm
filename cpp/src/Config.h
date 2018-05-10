@@ -23,9 +23,6 @@ class Config{
         const uint32_t GetThreads() const {
             return params_.at("threads"); 
         }
-        const std::string GetLoss() const {
-            return params_.at("loss"); 
-        }
         const ObjectiveType GetObjective() const {
             return params_.at("objective"); 
         }
