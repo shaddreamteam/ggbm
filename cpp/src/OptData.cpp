@@ -21,11 +21,10 @@ float_type OptData::GetPrediction(uint32_t row_number) const {
 }
 
 void OptData::Update(const TrainDataset& dataset,
-            const std::vector<float_type>& increment_predictions,
-            float_type learning_rate,
-            const Loss& loss) {
+                     const std::vector<float_type>& increment_predictions,
+                     const Loss& loss) {
     for(uint32_t i = 0; i < predictions_.size(); ++i) {
-       predictions_[i] += increment_predictions[i] * learning_rate; 
+       predictions_[i] += increment_predictions[i];
     }
     hessians_ = loss.GetHessians(dataset, predictions_);
     gradients_ = loss.GetGradients(dataset, predictions_);

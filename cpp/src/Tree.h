@@ -29,18 +29,14 @@ public:
         bin_id bin;
     };
 
-    Tree() : initialized_(false) {};
+    Tree(const Config& config) : initialized_(false), config_(config) {};
 
-    void Construct(const Config& config,
-                   const TrainDataset& dataset, 
+    void Construct(const TrainDataset& dataset,
                    const std::vector<float_type>& gradients,
                    const std::vector<float_type>& hessians);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
-    std::vector<float_type> PredictFromFile(const std::string& filename, 
-                                            const FeatureTransformer& ft, 
-                                            bool fileHasTarget,
-                                            char sep=',') const;
+
     bool IsInitialized() const;
 
     void Save(std::ofstream& stream);
@@ -48,12 +44,12 @@ public:
 
 private:
     bool initialized_;
+    const Config& config_;
     uint32_t depth_ = 0;
     std::vector<Split> splits_;
     std::vector<float_type> weights_;
 
-    std::vector<uint32_t> SampleRows(const Config& config,
-                                     uint32_t n_rows) const;
+    std::vector<uint32_t> SampleRows(uint32_t n_rows) const;
 };
 
 #endif //CPP_TREE_H

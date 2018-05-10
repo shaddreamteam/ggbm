@@ -16,8 +16,7 @@ public:
     float_type GetPrediction(uint32_t row_number) const;    
     void Update(const TrainDataset& dataset,
                 const std::vector<float_type>& increment_predictions,
-                float_type learning_rate,
-                const Loss& loss); 
+                const Loss& loss);
 
 private:
     std::vector<float_type> gradients_;

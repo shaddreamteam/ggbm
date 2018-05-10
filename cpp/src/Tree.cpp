@@ -11,17 +11,16 @@
 
 
 class OptData;
-void Tree::Construct(const Config& config,
-                     const TrainDataset& dataset,
+void Tree::Construct(const TrainDataset& dataset,
                      const std::vector<float_type>& gradients,
                      const std::vector<float_type>& hessians) {
-    std::vector<uint32_t> indexes  = SampleRows(config, dataset.GetRowCount());
+    std::vector<uint32_t> indexes  = SampleRows(dataset.GetRowCount());
     std::vector<Leaf> leafs = {Leaf(0, 0, indexes)};
 
-    for(depth_ = 0; depth_ < config.GetDepth(); ++depth_) {
+    for(depth_ = 0; depth_ < config_.GetDepth(); ++depth_) {
         std::vector<SearchParameters> split_params(dataset.GetFeatureCount());
         auto find_split = [&dataset, &leafs, &split_params,
-			               config, &gradients, &hessians, this]
+			               &gradients, &hessians, this]
 						 (int32_t feature_number) {
             const std::vector<bin_id>& feature_vector =
                 dataset.GetFeatureVector(feature_number);
@@ -31,7 +30,7 @@ void Tree::Construct(const Config& config,
             std::vector<Histogram> histograms;
             for(const Leaf& leaf : leafs) {
                 histograms.push_back(leaf.GetHistogram(feature_number,
-                                                       config.GetLambdaL2(),
+                                                       config_.GetLambdaL2(),
                                                        bin_count,
                                                        feature_vector,
                                                        gradients,
@@ -62,8 +61,8 @@ void Tree::Construct(const Config& config,
             split_params[feature_number] = search_parameters;
         };
 
-        TaskQueue<decltype(find_split), int32_t> task_queue(
-                config.GetThreads(), &find_split);
+        TaskQueue<decltype(find_split), int32_t> task_queue(config_.GetThreads(),
+                                                            &find_split);
         for (int32_t feature_number = 0;
              feature_number < dataset.GetFeatureCount();
              ++feature_number) {
@@ -106,7 +105,7 @@ void Tree::Construct(const Config& config,
     initialized_ = true;
 
     for(const auto& leaf: leafs) {
-        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight();
+        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight() * config_.GetLearningRate();
     }
 }
 
@@ -128,15 +127,6 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
         predictions.push_back(prediction);
     }
     return predictions;
-}
-
-
-std::vector<float_type> Tree::PredictFromFile(const std::string& filename,
-                                              const FeatureTransformer& ft,
-                                              bool fileHasTarget, 
-                                              char sep) const {
-    TestDataset dataset(filename, ft, fileHasTarget);
-    return PredictFromDataset(dataset);
 }
 
 bool Tree::IsInitialized() const {
@@ -175,15 +165,14 @@ void Tree::Load(std::ifstream& stream) {
     initialized_ = true;
 }
 
-std::vector<uint32_t> Tree::SampleRows(const Config& config,
-                                       uint32_t n_rows) const {
+std::vector<uint32_t> Tree::SampleRows(uint32_t n_rows) const {
     std::vector<uint32_t> row_indexes;
-    if(config.GetRowSampling() >= 1 - EPS) {
+    if(config_.GetRowSampling() >= 1 - EPS) {
         row_indexes = std::vector<uint32_t>(n_rows);
         std::iota(row_indexes.begin(), row_indexes.end(), 0);
     } else {
-        float_type sampling_coef = std::max(config.GetRowSampling(),
-                float(config.GetMinSubsample()) / n_rows);
+        float_type sampling_coef = std::max(config_.GetRowSampling(),
+                float(config_.GetMinSubsample()) / n_rows);
         std::random_device rd;
         std::mt19937 generator(rd());
         std::uniform_real_distribution<double> distribution(0.0,1.0);

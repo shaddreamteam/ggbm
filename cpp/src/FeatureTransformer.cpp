@@ -36,7 +36,8 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
         this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
     };
 
-    TaskQueue<decltype(find_bin_vector), int32_t> task_queue(thread_count_, &find_bin_vector);
+    TaskQueue<decltype(find_bin_vector), int32_t> task_queue(config_.GetThreads(),
+                                                             &find_bin_vector);
     for (int32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
@@ -64,7 +65,8 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
         }
     };
 
-    TaskQueue<decltype(transform_vector), int32_t> task_queue(thread_count_, &transform_vector);
+    TaskQueue<decltype(transform_vector), int32_t> task_queue(config_.GetThreads(),
+                                                              &transform_vector);
     for (int32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
