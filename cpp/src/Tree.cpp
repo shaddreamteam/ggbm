@@ -19,50 +19,13 @@ void Tree::Construct(const TrainDataset& dataset,
 
     for(depth_ = 0; depth_ < config_.GetDepth(); ++depth_) {
         std::vector<SearchParameters> split_params(dataset.GetFeatureCount());
-        auto find_split = [&dataset, &leafs, &split_params,
-			               &gradients, &hessians, this]
-						 (int32_t feature_number) {
-            const std::vector<bin_id>& feature_vector =
-                dataset.GetFeatureVector(feature_number);
-            uint32_t bin_count = dataset.GetBinCount(feature_number);
-            SearchParameters search_parameters;
-
-            std::vector<Histogram> histograms;
-            for(const Leaf& leaf : leafs) {
-                histograms.push_back(leaf.GetHistogram(feature_number,
-                                                       config_.GetLambdaL2(),
-                                                       bin_count,
-                                                       feature_vector,
-                                                       gradients,
-                                                       hessians));
-            }
-
-            for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
-                float_type gain = 0;
-                std::vector<float_type> left_weigths(leafs.size());
-				std::vector<float_type> right_weigts(leafs.size());
-                for(uint32_t hist_number = 0; hist_number < histograms.size();
-						++hist_number) {
-                    gain += histograms[hist_number].CalculateSplitGain(
-						bin_number);
-                    std::tie(left_weigths[hist_number],
-                             right_weigts[hist_number]) =
-                    	histograms[hist_number].CalculateSplitWeights(bin_number);
-                }
-
-                if(gain <= search_parameters.gain) {
-                    search_parameters.gain = gain;
-                    search_parameters.bin = bin_number;
-                    search_parameters.left_weigths = left_weigths;
-                    search_parameters.right_weights = right_weigts;
-                }
-            }
-
-            split_params[feature_number] = search_parameters;
+        auto find_split = [&dataset, &leafs, &split_params,  &gradients, 
+                           &hessians, this]  (int32_t feature_number) {
+            FindSplit(dataset, leafs, gradients, hessians, feature_number,
+                      &split_params);
         };
-
-        TaskQueue<decltype(find_split), int32_t> task_queue(config_.GetThreads(),
-                                                            &find_split);
+        TaskQueue<decltype(find_split), int32_t> 
+            task_queue(config_.GetThreads(), &find_split);
         for (int32_t feature_number = 0;
              feature_number < dataset.GetFeatureCount();
              ++feature_number) {
@@ -90,7 +53,8 @@ void Tree::Construct(const TrainDataset& dataset,
     initialized_ = true;
 
     for(const auto& leaf: leafs) {
-        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight() * config_.GetLearningRate();
+        weights_[leaf.GetIndex(depth_)] = leaf.GetWeight() * 
+            config_.GetLearningRate();
     }
 }
 
@@ -102,7 +66,7 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     for(uint32_t row_number = 0; row_number < dataset.GetRowCount(); ++row_number) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
-            if(dataset.GetFeature(object_index, split.feature) <= split.bin) {
+            if(dataset.GetFeature(row_number, split.feature) <= split.bin) {
                 list_index = list_index * 2 + 1;
             } else {
                 list_index = list_index * 2 + 2;
@@ -187,3 +151,44 @@ std::vector<Leaf> Tree::MakeNewLeafs(std::vector<bin_id> feature_vector,
     }
     return new_leafs;
 }
+
+void Tree::FindSplit(const TrainDataset& dataset,
+                     const std::vector<Leaf>& leafs,
+                     const std::vector<float_type>& gradients,
+                     const std::vector<float_type>& hessians,
+                     uint32_t feature_number,
+                     std::vector<SearchParameters>* split_params) const {
+    const std::vector<bin_id>& feature_vector =
+        dataset.GetFeatureVector(feature_number);
+    uint32_t bin_count = dataset.GetBinCount(feature_number);
+    SearchParameters search_parameters;
+
+    std::vector<Histogram> histograms;
+    for(const Leaf& leaf : leafs) {
+        histograms.push_back(leaf.GetHistogram(
+            feature_number, config_.GetLambdaL2(), bin_count,
+            feature_vector, gradients, hessians));
+    }
+
+    for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
+        float_type gain = 0;
+        std::vector<float_type> left_weigths(leafs.size());
+        std::vector<float_type> right_weigts(leafs.size());
+        for(uint32_t hist_number = 0; hist_number < histograms.size();
+                ++hist_number) {
+            gain += histograms[hist_number].CalculateSplitGain(bin_number);
+            std::tie(left_weigths[hist_number],
+                     right_weigts[hist_number]) =
+                histograms[hist_number].CalculateSplitWeights(bin_number);
+        }
+
+        if(gain <= search_parameters.gain) {
+            search_parameters.gain = gain;
+            search_parameters.bin = bin_number;
+            search_parameters.left_weigths = left_weigths;
+            search_parameters.right_weights = right_weigts;
+        }
+    }
+
+    (*split_params)[feature_number] = search_parameters;
+};
