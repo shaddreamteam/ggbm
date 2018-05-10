@@ -8,7 +8,7 @@ bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
 }
 
 uint32_t Dataset::GetRowCount() const {
-    return feature_bin_ids_.at(0).size();
+    return feature_bin_ids_[0].size();
 }
 
 uint32_t Dataset::GetFeatureCount() const{
@@ -71,14 +71,14 @@ void Dataset::GetDataFromFile(std::string filename,
     }
 }
 
-TrainDataset::TrainDataset(const std::string& filename, 
-                      FeatureTransformer& ft) {
+TrainDataset::TrainDataset(const std::string& filename,
+                           std::shared_ptr<FeatureTransformer> ft) {
     std::vector<std::vector<float_type>> data_x;
     GetDataFromFile(filename, data_x, true, &targets_);
-    feature_bin_ids_ = ft.FitTransform(data_x);
+    feature_bin_ids_ = ft->FitTransform(data_x);
     bin_counts_ = std::vector<uint32_t>(feature_bin_ids_.size(), 0);
     for(uint32_t i = 0; i < bin_counts_.size(); ++i) {
-        bin_counts_[i] = ft.GetBinCount(i);
+        bin_counts_[i] = ft->GetBinCount(i);
     }
     std::cout << "Train dataset initialized" << std::endl;
 }
@@ -97,9 +97,10 @@ const std::vector<bin_id>& TrainDataset::GetFeatureVector(
 }
 
 TestDataset::TestDataset(const std::string& filename,
-                         const FeatureTransformer& ft, bool fileHasTarget) {
+                         const std::shared_ptr<FeatureTransformer> ft,
+                         bool file_has_target) {
     std::vector<std::vector<float_type>> data_x;
-    GetDataFromFile(filename, data_x, fileHasTarget, nullptr);
-    feature_bin_ids_ = ft.Transform(data_x);
+    GetDataFromFile(filename, data_x, file_has_target, nullptr);
+    feature_bin_ids_ = ft->Transform(data_x);
 }
 

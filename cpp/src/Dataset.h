@@ -5,6 +5,7 @@
 #include <string>
 #include <istream>
 #include <fstream>
+#include <memory>
 #include "Base.h"
 #include "dataset_stub.h"
 #include "FeatureTransformer.h"
@@ -14,12 +15,6 @@ public:
     bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
     uint32_t GetRowCount() const;
     uint32_t GetFeatureCount() const;
-
-//    std::vector<std::vector<float_type>> Test(const std::string& filename) {
-//        std::vector<std::vector<float_type>> res;
-//        GetSampleAndTargetFromFile(filename, ',', &res);
-//        return res;
-//    };
 
 protected:
     std::vector<std::vector<bin_id>> feature_bin_ids_;
@@ -34,7 +29,9 @@ protected:
 
 class TrainDataset : public Dataset {
 public:
-    TrainDataset(const std::string& filename, FeatureTransformer& f);
+    TrainDataset(const std::string& filename,
+                 std::shared_ptr<FeatureTransformer> ft);
+
     float_type GetTarget(uint32_t row_number) const;
     uint32_t GetBinCount(uint32_t feature_number) const;
     const std::vector<bin_id>& GetFeatureVector(uint32_t feature_number) const;
@@ -46,15 +43,10 @@ private:
 
 class TestDataset : public Dataset {
 public:
-    TestDataset(const std::string& filename, const FeatureTransformer& ft, bool fileHasTarget);
+    TestDataset(const std::string& filename,
+                const std::shared_ptr<FeatureTransformer> ft,
+                bool file_has_target);
 };
 
-class CSVReader {
-public:
-    CSVReader(std::istream& csv);
-
-private:
-
-};
 
 #endif //CPP_DATASET_H

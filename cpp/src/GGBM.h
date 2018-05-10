@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "Base.h"
 #include "Loss.h"
 #include "OptData.h"
@@ -14,22 +15,23 @@
 
 class GGBM {
 public:
-    GGBM(Config& config, FeatureTransformer feature_transformer): 
-        thread_count_(config.GetThreads()),
-        objective_(config.GetObjective()),
-        feature_transformer_(feature_transformer) {};
+    GGBM(const Config& config, std::shared_ptr<FeatureTransformer> feature_transformer) :
+            config_(config),
+            objective_(config.GetObjective()),
+            feature_transformer_(feature_transformer) {};
 
-    void Train(const Config& config, const TrainDataset& trainDataset,
-               const Loss& loss);
+    void Train(const TrainDataset& trainDataset, const Loss& loss);
 
-    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
+    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
+
+    void Save(std::ofstream& stream);
+    void Load(std::ifstream& stream);
 
 private:
-    uint32_t thread_count_;
     float_type base_prediction_;
-    float_type learning_rate_;
     std::vector<Tree> trees_;
+    const Config& config_;
     ObjectiveType objective_;
-    FeatureTransformer feature_transformer_;
+    std::shared_ptr<FeatureTransformer> feature_transformer_;
 };
 #endif //CPP_GGBM_H

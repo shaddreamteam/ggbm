@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <fstream>
 #include "Config.h"
 #include "Dataset.h"
 #include "OptData.h"
@@ -20,28 +21,35 @@ struct SearchParameters {
 
 class Tree {
 public:
-    Tree() : initialized_(false) {};
+    struct Split {
+        Split() = default;
+        Split(uint32_t feature, bin_id bin) : feature(feature), bin(bin) {}
 
-    void Construct(const Config& config,
-                   const TrainDataset& dataset, 
+        uint32_t feature;
+        bin_id bin;
+    };
+
+    Tree(const Config& config) : initialized_(false), config_(config) {};
+
+    void Construct(const TrainDataset& dataset,
                    const std::vector<float_type>& gradients,
                    const std::vector<float_type>& hessians);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
-    std::vector<float_type> PredictFromFile(const std::string& filename, 
-                                            const FeatureTransformer& ft, 
-                                            bool fileHasTarget,
-                                            char sep=',') const;
+
     bool IsInitialized() const;
+
+    void Save(std::ofstream& stream);
+    void Load(std::ifstream& stream);
 
 private:
     bool initialized_;
+    const Config& config_;
     uint32_t depth_ = 0;
-    std::vector<std::tuple<uint32_t, bin_id>> splits_;
+    std::vector<Split> splits_;
     std::vector<float_type> weights_;
 
-    std::vector<uint32_t> SampleRows(const Config& config,
-                                     uint32_t n_rows) const;
+    std::vector<uint32_t> SampleRows(uint32_t n_rows) const;
     std::vector<Leaf> MakeNewLeafs(std::vector<bin_id> feature_vector,
                                    const std::vector<Leaf>& leafs,
                                    const SearchParameters& best_params);
