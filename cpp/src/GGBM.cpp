@@ -46,3 +46,24 @@ std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
     }
     return predictions;
 }
+
+void GGBM::Save(std::ofstream& stream) {
+    stream << base_prediction_ << '\n';
+    stream << static_cast<int32_t>(objective_) << '\n';
+    stream << trees_.size() << '\n';
+    for(Tree& tree : trees_) {
+        tree.Save(stream);
+    }
+}
+
+void GGBM::Load(std::ifstream& stream) {
+    uint32_t tree_count;
+    int32_t objective;
+    stream >> base_prediction_ >> objective >> tree_count;
+    objective_ = static_cast<ObjectiveType>(objective);
+    trees_.clear();
+    trees_.resize(tree_count);
+    for (uint32_t tree_number = 0; tree_number < tree_count; ++tree_number) {
+        trees_[tree_number].Load(stream);
+    }
+}

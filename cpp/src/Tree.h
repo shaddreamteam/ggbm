@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <fstream>
 #include "Config.h"
 #include "Dataset.h"
 #include "OptData.h"
@@ -20,6 +21,14 @@ struct SearchParameters {
 
 class Tree {
 public:
+    struct Split {
+        Split() = default;
+        Split(uint32_t feature, bin_id bin) : feature(feature), bin(bin) {}
+
+        uint32_t feature;
+        bin_id bin;
+    };
+
     Tree() : initialized_(false) {};
 
     void Construct(const Config& config,
@@ -34,10 +43,13 @@ public:
                                             char sep=',') const;
     bool IsInitialized() const;
 
+    void Save(std::ofstream& stream);
+    void Load(std::ifstream& stream);
+
 private:
     bool initialized_;
     uint32_t depth_ = 0;
-    std::vector<std::tuple<uint32_t, bin_id>> splits_;
+    std::vector<Split> splits_;
     std::vector<float_type> weights_;
 
     std::vector<uint32_t> SampleRows(const Config& config,

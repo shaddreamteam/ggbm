@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <fstream>
 #include "Base.h"
 #include "Loss.h"
 #include "OptData.h"
@@ -22,7 +23,10 @@ public:
     void Train(const Config& config, const TrainDataset& trainDataset,
                const Loss& loss);
 
-    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const; 
+    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
+
+    void Save(std::ofstream& stream);
+    void Load(std::ifstream& stream);
 
 private:
     uint32_t thread_count_;

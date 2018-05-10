@@ -2,6 +2,7 @@
 #define CPP_FEATURETRANSFORMER_H
 
 #include <vector>
+#include <fstream>
 #include "Base.h"
 
 class FeatureTransformer {
@@ -17,6 +18,9 @@ public:
     Transform(const std::vector<std::vector<float_type>>& feature_values) const;
     
     uint32_t GetBinCount(uint32_t feature_number) const;
+
+    void Save(std::ofstream& stream);
+    void Load(std::ifstream& stream);
 private:
 /*    std::vector<float_type> GreedyFindBin(const std::vector<float_type>& distinct_values,
                                           const std::vector<uint32_t>& counts,

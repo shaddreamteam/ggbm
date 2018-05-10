@@ -83,7 +83,7 @@ void Tree::Construct(const Config& config,
         auto best_params = split_params[best_feature];
         split_params.clear();
 
-        splits_.push_back(std::make_tuple(best_feature, best_params.bin));
+        splits_.emplace_back(best_feature, best_params.bin);
         Leaf left, right;
         std::vector<Leaf> new_leafs;
         const std::vector<bin_id>& feature_vector = 
@@ -118,7 +118,7 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     for(uint32_t object_index = 0; object_index < dataset.GetRowCount(); ++object_index) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
-            if(dataset.GetFeature(object_index, std::get<0>(split)) <= std::get<1>(split)) {
+            if(dataset.GetFeature(object_index, split.feature) <= split.bin) {
                 list_index = list_index * 2 + 1;
             } else {
                 list_index = list_index * 2 + 2;
@@ -141,6 +141,38 @@ std::vector<float_type> Tree::PredictFromFile(const std::string& filename,
 
 bool Tree::IsInitialized() const {
     return initialized_;
+}
+
+void Tree::Save(std::ofstream& stream) {
+    stream << splits_.size() << '\n';
+    for (const auto& split: splits_) {
+        stream << split.feature << " ";
+        stream << split.bin << " ";
+    }
+
+    stream << "\n" << weights_.size() << "\n";
+    for (auto weight: weights_) {
+        stream << weight << " ";
+    }
+    stream << "\n";
+}
+
+void Tree::Load(std::ifstream& stream) {
+    uint32_t split_count;
+    stream >> split_count;
+    splits_.resize(split_count);
+    for (int32_t split_number = 0; split_number < split_count; ++split_number) {
+        stream >> splits_[split_number].feature >> splits_[split_number].bin;
+    }
+
+    uint32_t weight_count;
+    stream >> weight_count;
+    weights_.resize(weight_count);
+    for (int32_t weight_number = 0; weight_number < weight_count; ++weight_number) {
+        stream >> weights_[weight_number];
+    }
+
+    initialized_ = true;
 }
 
 std::vector<uint32_t> Tree::SampleRows(const Config& config,

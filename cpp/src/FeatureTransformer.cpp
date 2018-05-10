@@ -13,33 +13,6 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
               const std::vector<uint32_t>& counts,
               uint64_t total_cnt);
 
-/*struct FindBinFunctor {
-    explicit FindBinFunctor(const std::vector<float_type>* feature_vector,
-                   std::vector<float_type>* out_bin_upper_bounds)
-            : feature_vector_(feature_vector),
-              out_bin_upper_bounds_(out_bin_upper_bounds) {}
-
-    void operator()() {
-        auto feature_vector = *feature_vector_; // copy to sort
-        std::sort(feature_vector.begin(), feature_vector.end());
-        std::vector<float_type> distinct_values = {feature_vector[0]};
-        std::vector<uint32_t> counts = {1};
-        for (uint32_t i = 1; i < feature_vector.size(); ++i) {
-            if (feature_vector[i] == distinct_values.back()) {
-                ++counts.back();
-            } else {
-                distinct_values.push_back(feature_vector[i]);
-                counts.push_back(1);
-            }
-        }
-        uint64_t row_count = feature_vector.size();
-        *out_bin_upper_bounds_ = GreedyFindBin(distinct_values, counts, row_count);
-    }
-
-private:
-    const std::vector<float_type>* feature_vector_;
-    std::vector<float_type>* out_bin_upper_bounds_;
-};*/
 
 std::vector<std::vector<bin_id>>
 FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& feature_values) {
@@ -174,5 +147,33 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
 }
 
 uint32_t FeatureTransformer::GetBinCount(uint32_t feature_number) const {
-    return bin_upper_bounds_.at(feature_number).size();
+    return bin_upper_bounds_[feature_number].size();
+}
+
+void FeatureTransformer::Save(std::ofstream& stream) {
+    stream << bin_upper_bounds_.size() << "\n";
+    for (const auto& feature_upper_bounds: bin_upper_bounds_) {
+        stream << feature_upper_bounds.size() << "\n";
+        for (const auto upper_bound: feature_upper_bounds) {
+            stream << upper_bound << " ";
+        }
+        stream << "\n";
+    }
+}
+
+void FeatureTransformer::Load(std::ifstream& stream) {
+    uint32_t features_count;
+    stream >> features_count;
+    bin_upper_bounds_.resize(features_count);
+    for (int32_t feature_number = 0; feature_number < features_count; ++feature_number) {
+        uint32_t bin_count;
+        stream >> bin_count;
+        bin_upper_bounds_[feature_number].resize(bin_count);
+        for (int32_t bin_number = 0; bin_number < bin_count; ++bin_number) {
+            float_type upper_bound;
+            stream >> upper_bound;
+            bin_upper_bounds_[feature_number][bin_number] = upper_bound;
+        }
+    }
+    initialized_ = true;
 }
