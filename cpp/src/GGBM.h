@@ -18,9 +18,9 @@ public:
     GGBM(const Config& config) :
             config_(config),
             objective_(config.GetObjective()),
-            feature_transformer_(std::make_shared<FeatureTransformer>(config);) {};
+            feature_transformer_(std::make_shared<FeatureTransformer>(config)) {};
 
-    void Train(const TrainDataset& trainDataset, const Loss& loss);
+    void Train(const TrainDataset& trainDataset);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
 

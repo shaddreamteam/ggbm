@@ -21,28 +21,23 @@ public:
         
         GGBM ggbm(cfg);
         if(cfg.GetModelFilename().size() == 0) {
-            TrainDataset dataset(cfg.GetTrainFilename(), ft);
-            MSE loss;
-            ggbm.Train(dataset, loss);
+            TrainDataset dataset(cfg.GetTrainFilename(), ggbm.GetFeatureTransformer());
+            ggbm.Train(dataset);
             std::ofstream out_model_file("model.bst");
             ggbm.Save(out_model_file);
-            // save model
-            PredictionFlow(cfg, ft, ggbm);
         } else {
             std::ifstream in_model_file(cfg.GetModelFilename());
             ggbm.Load(in_model_file);
-            // load model
-            // PredictionFlow(cfg, ft);
         }
 
-
+        PredictionFlow(cfg, &ggbm);
     }
+
 private:
     void PredictionFlow(Config& cfg,
-                        const std::shared_ptr<FeatureTransformer> ft,
-                        GGBM& boosting) {
-        TestDataset test(cfg.GetTestFilename(), ft, false);
-        auto preds = boosting.PredictFromDataset(test);
+                        GGBM* ggbm) {
+        TestDataset test(cfg.GetTestFilename(), ggbm->GetFeatureTransformer(), false);
+        auto preds = ggbm->PredictFromDataset(test);
         // save predictions
         for(int i = 0; i < preds.size() && i < 100; ++i) {
             std::cout << preds[i] << ' ';
