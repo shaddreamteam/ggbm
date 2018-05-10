@@ -15,17 +15,19 @@
 
 class GGBM {
 public:
-    GGBM(const Config& config, std::shared_ptr<FeatureTransformer> feature_transformer) :
+    GGBM(const Config& config) :
             config_(config),
             objective_(config.GetObjective()),
-            feature_transformer_(feature_transformer) {};
+            feature_transformer_(std::make_shared<FeatureTransformer>(config)) {};
 
-    void Train(const TrainDataset& trainDataset, const Loss& loss);
+    void Train(const TrainDataset& trainDataset);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
 
     void Save(std::ofstream& stream);
     void Load(std::ifstream& stream);
+
+    std::shared_ptr<FeatureTransformer> GetFeatureTransformer();
 
 private:
     float_type base_prediction_;
