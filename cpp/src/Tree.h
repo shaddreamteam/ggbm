@@ -50,6 +50,15 @@ private:
     std::vector<float_type> weights_;
 
     std::vector<uint32_t> SampleRows(uint32_t n_rows) const;
+    std::vector<Leaf> MakeNewLeafs(std::vector<bin_id> feature_vector,
+                                   const std::vector<Leaf>& leafs,
+                                   const SearchParameters& best_params);
+    void FindSplit(const TrainDataset& dataset,
+                   const std::vector<Leaf>& leafs,
+                   const std::vector<float_type>& gradients,
+                   const std::vector<float_type>& hessians,
+                   uint32_t feature_number,
+                   std::vector<SearchParameters>* split_params) const;
 };
 
 #endif //CPP_TREE_H

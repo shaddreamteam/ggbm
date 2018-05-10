@@ -3,8 +3,6 @@
 
 
 #include <unordered_map>
-#include <fstream>
-#include <memory>
 
 #include "GGBM.h"
 #include "InputParser.h"
