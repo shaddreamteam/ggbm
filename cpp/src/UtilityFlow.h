@@ -15,7 +15,8 @@ public:
     UtilityFlow() {};    
 
     void Start(int argc, char **argv){
-        InputParser parser(argc, argv);
+        InputParser parser;
+        parser.ParseArgs(argc, argv);
         Config cfg(parser.config);
 
         auto ft = std::make_shared<FeatureTransformer>(cfg);
