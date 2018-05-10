@@ -123,6 +123,10 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
                 list_index = list_index * 2 + 2;
             }
         }
+        /*if (list_index - uint32_t(pow(2, depth_)) + 1 >= weights_.size() ||
+                list_index - uint32_t(pow(2, depth_)) + 1 < 0) {
+            std::cout << list_index - uint32_t(pow(2, depth_)) + 1 << std::endl;
+        }*/
         auto prediction = weights_[list_index - uint32_t(pow(2, depth_)) + 1];
         predictions.push_back(prediction);
     }
@@ -137,10 +141,11 @@ void Tree::Save(std::ofstream& stream) {
     stream << splits_.size() << '\n';
     for (const auto& split: splits_) {
         stream << split.feature << " ";
-        stream << split.bin << " ";
+        stream << static_cast<int32_t>(split.bin) << " ";
     }
 
-    stream << "\n" << weights_.size() << "\n";
+    stream << "\n" << depth_ << "\n";
+    stream << weights_.size() << "\n";
     for (auto weight: weights_) {
         stream << weight << " ";
     }
@@ -152,9 +157,12 @@ void Tree::Load(std::ifstream& stream) {
     stream >> split_count;
     splits_.resize(split_count);
     for (int32_t split_number = 0; split_number < split_count; ++split_number) {
-        stream >> splits_[split_number].feature >> splits_[split_number].bin;
+        int32_t bin;
+        stream >> splits_[split_number].feature >> bin;
+        splits_[split_number].bin = static_cast<bin_id>(bin);
     }
 
+    stream >> depth_;
     uint32_t weight_count;
     stream >> weight_count;
     weights_.resize(weight_count);
