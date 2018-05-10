@@ -64,3 +64,7 @@ void GGBM::Load(std::ifstream& stream) {
         trees_[tree_number].Load(stream);
     }
 }
+
+std::shared_ptr<FeatureTransformer> GGBM::GetFeatureTransformer() {
+    return feature_transformer_;
+}

@@ -14,12 +14,11 @@ class UtilityFlow{
 public:
     UtilityFlow() {};    
 
-    void Start(int argc, char **argv){
+    void Start(int argc, char **argv) {
         InputParser parser(argc, argv);
         Config cfg(parser.config);
-
-        auto ft = std::make_shared<FeatureTransformer>(cfg);
-        GGBM ggbm(cfg, ft);
+        
+        GGBM ggbm(cfg);
         if(cfg.GetModelFilename().size() == 0) {
             TrainDataset dataset(cfg.GetTrainFilename(), ft);
             MSE loss;
