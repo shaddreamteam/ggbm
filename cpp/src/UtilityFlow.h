@@ -45,12 +45,16 @@ private:
     }
 
     void MakePrediction(Config& cfg, GGBM* ggbm) {
-        TestDataset test(cfg.GetTestFilename(), ggbm->GetFeatureTransformer(), cfg.GetFileHasTarget());
+        TestDataset test(cfg.GetTestFilename(),
+                         ggbm->GetFeatureTransformer(),
+                         cfg.GetFileHasTarget());
         auto preds = ggbm->PredictFromDataset(test);
-        // save predictions
-        for(int i = 0; i < preds.size() && i < 100; ++i) {
-            std::cout << preds[i] << ' ';
+
+        std::ofstream stream(cfg.GetOutputFilename());
+        for(int i = 0; i < preds.size() - 1; ++i) {
+            stream << preds[i] << '\n';
         }
+        stream << preds[preds.size() - 1];
     }
 };
 
