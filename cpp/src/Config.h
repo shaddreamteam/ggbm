@@ -11,6 +11,9 @@ class Config{
         Config() {};
         Config(const Config&) = default;
         
+        const std::string GetMode() const { 
+            return params_.at("mode"); 
+        }
         const std::string GetModelFilename() const { 
             return params_.at("filename_model"); 
         }
@@ -44,8 +47,12 @@ class Config{
         const uint32_t GetMinSubsample() const {
             return params_.at("min_subsample"); 
         }
+        const bool GetFileHasTarget() const {
+            return params_.at("file_has_target"); 
+        }
     private:
         std::unordered_map<std::string, ConfigValue> params_={
+            {"mode", ConfigValue("\0", kString)},
             {"filename_model", ConfigValue("\0", kString)},
             {"filename_train", ConfigValue("\0", kString)},
             {"filename_test", ConfigValue("\0", kString)},
@@ -57,6 +64,7 @@ class Config{
             {"lambda", ConfigValue("1", kFloatType)},
             {"row_subsampling", ConfigValue("1", kFloatType)},
             {"min_subsample", ConfigValue("1", kUint32_t)},
+            {"file_has_target", ConfigValue("false", kBool)},
         };
 };
 

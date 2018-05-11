@@ -9,7 +9,8 @@ enum ParamType {
     kUint32_t,
     kFloatType,
     kString,
-    kObjectiveType
+    kBool,
+    kObjectiveType,
 };
 
 
@@ -23,12 +24,10 @@ public:
             val_float_ = std::stod(s);
         } else if(type_ == kString) {
             val_string_ = s;
+        } else if(type_ == kBool) {
+            val_bool_ = StringToBool(s);
         } else if(type_ == kObjectiveType) {
-            if(s == "mse") {
-                val_objective_ = kMse;
-            } else if(s == "logloss") {
-                val_objective_ = kLogLoss;
-            }
+            val_objective_ = StringToObj(s);
         }
     }
 
@@ -44,15 +43,38 @@ public:
     operator ObjectiveType() const{
         return val_objective_;
     }
+    operator bool() const{
+        return val_bool_;
+    }
     ParamType GetType() {
         return type_;
     }
 
 private:
+    ObjectiveType StringToObj(const std::string& s) {
+        if(s == "mse") {
+            return kMse;
+        } else if(s == "logloss") {
+            return kLogLoss;
+        } else {
+             throw std::invalid_argument("Wrong argument for objective");
+        }
+    };
+    bool StringToBool(const std::string& s) {
+        if(s == "true") {
+            return true;
+        } else if(s == "false") {
+            return false;
+        } else {
+             throw std::invalid_argument("Ivalid argument for file_has_target");
+        }
+    };
+
     uint32_t val_int_;
     float_type val_float_;
     std::string val_string_;
     ObjectiveType val_objective_;
+    bool val_bool_;
     ParamType type_; 
 };
 
