@@ -11,13 +11,14 @@
 
 class Histogram {
 public:
+    Histogram() : gradient_cs_(0), hessian_cs_(0), lambda_l2_reg_(0),
+                  empty_leaf_(true) {};
+
     Histogram(std::vector<float_type> gradient_cs,
-              std::vector<float_type> hessian_cs, 
+              std::vector<float_type> hessian_cs,
               float_type lambda_l2_reg, bool empty_leaf) :
-        gradient_cs_(gradient_cs),
-        hessian_cs_(hessian_cs),
-        lambda_l2_reg_(lambda_l2_reg),
-        empty_leaf_(empty_leaf) {};
+        gradient_cs_(gradient_cs), hessian_cs_(hessian_cs),
+        lambda_l2_reg_(lambda_l2_reg), empty_leaf_(empty_leaf) {};
 
     float_type CalculateSplitGain(bin_id bin_number) const;
     std::tuple<float_type, float_type> CalculateSplitWeights(bin_id bin_number) const;
@@ -35,16 +36,23 @@ private:
 class Leaf {
 public:
     Leaf() {};
-    Leaf(uint32_t leaf_index, float_type weight, 
+    Leaf(uint32_t leaf_index, float_type weight, uint32_t n_features,
          std::vector<uint32_t> row_indexes):
-        leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes) {};
+        leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes),
+        histograms_(n_features) {};
 
-    Histogram GetHistogram(uint32_t feature_number,
+    void CalulateHistogram(uint32_t feature_number,
                            float_type lambda_l2_reg,
                            uint32_t bin_count,
                            const std::vector<bin_id>& feature_vector,
                            const std::vector<float_type>& gradients,
-                           const std::vector<float_type>& hessians) const;
+                           const std::vector<float_type>& hessians);
+
+    float_type CalculateSplitGain(uint32_t feature_number,
+                                 bin_id bin_number) const;
+
+    std::tuple<float_type, float_type> CalculateSplitWeights(
+            uint32_t feature_number, bin_id bin_number) const;
 
     Leaf MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
                    bin_id bin_number,  float_type left_weight) const;
@@ -57,5 +65,6 @@ private:
     uint32_t leaf_index_;
     float_type weight_;
     std::vector<uint32_t> row_indexes_;
+    std::vector<Histogram> histograms_;
 };
 #endif //CPP_LEAF_H

@@ -15,13 +15,13 @@ void Tree::Construct(const TrainDataset& dataset,
                      const std::vector<float_type>& gradients,
                      const std::vector<float_type>& hessians) {
     std::vector<uint32_t> indexes  = SampleRows(dataset.GetRowCount());
-    std::vector<Leaf> leafs = {Leaf(0, 0, indexes)};
+    std::vector<Leaf> leafs = {Leaf(0, 0, dataset.GetFeatureCount(), indexes)};
 
     for(depth_ = 0; depth_ < config_.GetDepth(); ++depth_) {
         std::vector<SearchParameters> split_params(dataset.GetFeatureCount());
         auto find_split = [&dataset, &leafs, &split_params,  &gradients, 
                            &hessians, this]  (int32_t feature_number) {
-            FindSplit(dataset, leafs, gradients, hessians, feature_number,
+            FindSplit(dataset, gradients, hessians, feature_number, &leafs,
                       &split_params);
         };
         TaskQueue<decltype(find_split), int32_t> 
@@ -161,33 +161,34 @@ std::vector<Leaf> Tree::MakeNewLeafs(std::vector<bin_id> feature_vector,
 }
 
 void Tree::FindSplit(const TrainDataset& dataset,
-                     const std::vector<Leaf>& leafs,
                      const std::vector<float_type>& gradients,
                      const std::vector<float_type>& hessians,
                      uint32_t feature_number,
+                     std::vector<Leaf>* leafs,
                      std::vector<SearchParameters>* split_params) const {
     const std::vector<bin_id>& feature_vector =
         dataset.GetFeatureVector(feature_number);
     uint32_t bin_count = dataset.GetBinCount(feature_number);
     SearchParameters search_parameters;
 
-    std::vector<Histogram> histograms;
-    for(const Leaf& leaf : leafs) {
-        histograms.push_back(leaf.GetHistogram(
+    for(Leaf& leaf : *leafs) {
+        leaf.CalulateHistogram(
             feature_number, config_.GetLambdaL2(), bin_count,
-            feature_vector, gradients, hessians));
+            feature_vector, gradients, hessians);
     }
 
     for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
         float_type gain = 0;
-        std::vector<float_type> left_weigths(leafs.size());
-        std::vector<float_type> right_weigts(leafs.size());
-        for(uint32_t hist_number = 0; hist_number < histograms.size();
-                ++hist_number) {
-            gain += histograms[hist_number].CalculateSplitGain(bin_number);
-            std::tie(left_weigths[hist_number],
-                     right_weigts[hist_number]) =
-                histograms[hist_number].CalculateSplitWeights(bin_number);
+        std::vector<float_type> left_weigths(leafs->size());
+        std::vector<float_type> right_weigts(leafs->size());
+        for(uint32_t leaf_number = 0; leaf_number < leafs->size();
+                ++leaf_number) {
+            gain += (*leafs)[leaf_number].CalculateSplitGain(feature_number,
+                                                             bin_number);
+            std::tie(left_weigths[leaf_number],
+                     right_weigts[leaf_number]) =
+                (*leafs)[leaf_number].CalculateSplitWeights(feature_number, 
+                                                         bin_number);
         }
 
         if(gain <= search_parameters.gain) {
