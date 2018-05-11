@@ -12,6 +12,13 @@ public:
         for (int i = 1; i < argc; ++i) {
             ParseToken(std::string(argv[i]), config);
         }
+
+        std::string mode = config->params_.at("mode");
+        if(mode == "\0") {
+            throw std::invalid_argument("mode is not given");
+        } else if(!(mode == "train" || mode == "predict")) {
+            throw std::invalid_argument("Ivalid argument for mode");
+        }
     };
 
     // Config config;
@@ -25,12 +32,6 @@ private:
             config->params_.at(param_name) = ConfigValue(token.substr(pos+1), type);
         } catch(const std::invalid_argument& e) {
             throw std::invalid_argument("Ivalid argument for " + param_name);
-        }
-        std::string mode = config->params_.at("mode");
-        if(mode == "\0") {
-            throw std::invalid_argument("mode is not given");
-        } else if(!(mode == "train" || mode == "predict")) {
-            throw std::invalid_argument("Ivalid argument for mode");
         }
     }
 };
