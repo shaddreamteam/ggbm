@@ -21,7 +21,9 @@ public:
         if(cfg.GetMode() == "train") {
             TrainModel(cfg, &ggbm);
             // predict for testing:
-            MakePrediction(cfg, &ggbm);
+            if (!cfg.GetTestFilename().empty()) {
+                MakePrediction(cfg, &ggbm);
+            }
         } else if(cfg.GetMode() == "predict") {
             LoadModel(cfg, &ggbm);
             MakePrediction(cfg, &ggbm);

@@ -87,7 +87,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
             bin_upper_bound.push_back(std::nextafter(
                     (distinct_values[i] + distinct_values[i + 1]) / 2.0, INFINITY));
         }
-        bin_upper_bound.push_back(std::numeric_limits<float_type>::infinity());
+        bin_upper_bound.push_back(std::numeric_limits<float_type>::max());
     } else {
         double mean_bin_size = static_cast<double>(total_cnt) / kMaxBin;
 
@@ -104,8 +104,8 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
         }
 
         mean_bin_size = static_cast<double>(rest_sample_cnt) / rest_bin_cnt;
-        std::vector<float_type> upper_bounds(kMaxBin, std::numeric_limits<float_type>::infinity());
-        std::vector<float_type> lower_bounds(kMaxBin, std::numeric_limits<float_type>::infinity());
+        std::vector<float_type> upper_bounds(kMaxBin, std::numeric_limits<float_type>::max());
+        std::vector<float_type> lower_bounds(kMaxBin, std::numeric_limits<float_type>::max());
 
         uint32_t bin_cnt = 0;
         lower_bounds[bin_cnt] = distinct_values[0];
@@ -143,7 +143,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
             }
         }
         // last bin upper bound
-        bin_upper_bound.push_back(std::numeric_limits<float_type>::infinity());
+        bin_upper_bound.push_back(std::numeric_limits<float_type>::max());
     }
     return bin_upper_bound;
 }

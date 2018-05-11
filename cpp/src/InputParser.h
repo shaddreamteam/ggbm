@@ -14,7 +14,7 @@ public:
         }
 
         std::string mode = config->params_.at("mode");
-        if(mode == "\0") {
+        if(mode.empty()) {
             throw std::invalid_argument("mode is not given");
         } else if(!(mode == "train" || mode == "predict")) {
             throw std::invalid_argument("Ivalid argument for mode");

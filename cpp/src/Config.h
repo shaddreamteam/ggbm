@@ -52,10 +52,10 @@ class Config{
         }
     private:
         std::unordered_map<std::string, ConfigValue> params_={
-            {"mode", ConfigValue("\0", kString)},
-            {"filename_model", ConfigValue("\0", kString)},
-            {"filename_train", ConfigValue("\0", kString)},
-            {"filename_test", ConfigValue("\0", kString)},
+            {"mode", ConfigValue("", kString)},
+            {"filename_model", ConfigValue("", kString)},
+            {"filename_train", ConfigValue("", kString)},
+            {"filename_test", ConfigValue("", kString)},
             {"threads", ConfigValue("1", kUint32_t)},
             {"objective", ConfigValue("mse", kObjectiveType)},
             {"learning_rate", ConfigValue("0.1", kFloatType)},
