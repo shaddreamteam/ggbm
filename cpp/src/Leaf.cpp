@@ -58,7 +58,8 @@ std::tuple<float_type, float_type> Histogram::CalculateSplitWeights(
 }
 
 Histogram Histogram::operator-(const Histogram& other) const {
-    Histogram new_hist(gradient_cs_, hessian_cs_, lambda_l2_reg_, empty_leaf_);
+    Histogram new_hist(gradient_cs_, hessian_cs_, lambda_l2_reg_, empty_leaf_,
+            bin_count_);
     for(uint32_t i = 0; i < gradient_cs_.size(); ++i) {
         new_hist.gradient_cs_[i] -= other.gradient_cs_[i];
         new_hist.hessian_cs_[i] -= other.hessian_cs_[i];
@@ -88,7 +89,7 @@ void Leaf::CalculateHistogram(uint32_t feature_number,
         hessian_sum[i] += hessian_sum[i - 1];
     }
     histograms_[feature_number] = 
-        Histogram(gradient_sum, hessian_sum, lambda_l2_reg, false);
+        Histogram(gradient_sum, hessian_sum, lambda_l2_reg, false, bin_count);
 }
 
 void Leaf::DiffHistogram(uint32_t feature_number, const Leaf& parent,
