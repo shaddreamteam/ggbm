@@ -72,6 +72,7 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
     std::vector<float_type> predictions;
     predictions.reserve(dataset.GetRowCount());
 
+    uint32_t base = pow(2, depth_);
     for(uint32_t row_number = 0; row_number < dataset.GetRowCount(); ++row_number) {
         uint32_t list_index = 0;
         for (auto& split : splits_) {
@@ -85,7 +86,7 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
                 list_index - uint32_t(pow(2, depth_)) + 1 < 0) {
             std::cout << list_index - uint32_t(pow(2, depth_)) + 1 << std::endl;
         }*/
-        auto prediction = weights_[list_index - uint32_t(pow(2, depth_)) + 1];
+        auto prediction = weights_[list_index - base + 1];
         predictions.push_back(prediction);
     }
     return predictions;
