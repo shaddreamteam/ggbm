@@ -184,6 +184,7 @@ void Tree::FindSplit(const TrainDataset& dataset,
     SearchParameters search_parameters;
     search_parameters.left_weigths = std::vector<float_type>(leafs->size(), 0);
     search_parameters.right_weights= std::vector<float_type>(leafs->size(), 0);
+    uint32_t base = uint32_t(pow(2, depth - 1));
 
     if(!parent_leafs) {
         for(Leaf& leaf : *leafs) {
@@ -201,7 +202,7 @@ void Tree::FindSplit(const TrainDataset& dataset,
                 bigger = &(*leafs)[left_index];
             }
             
-            uint32_t parent_index = bigger->ParentVectorIndex(depth);
+            uint32_t parent_index = bigger->ParentVectorIndex(base);
             const Leaf& parent = (*parent_leafs)[parent_index];
             if(smaller->Size() != 0) {
                 smaller->CalculateHistogram(

@@ -63,7 +63,7 @@ public:
                    bin_id bin_number,  float_type left_weight) const;
  
     uint32_t GetIndex(uint32_t depth) const;
-    uint32_t ParentVectorIndex(uint32_t depth) const;
+    uint32_t ParentVectorIndex(uint32_t base) const;
 
     bool IsEmpty() const;
     float_type GetWeight() const;

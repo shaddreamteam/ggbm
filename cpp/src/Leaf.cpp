@@ -64,7 +64,7 @@ Histogram Histogram::operator-(const Histogram& other) const {
         new_hist.hessian_cs_[i] -= other.hessian_cs_[i];
     }
     return new_hist;
-}
+}c
 
 
 void Leaf::CalculateHistogram(uint32_t feature_number,
@@ -132,9 +132,9 @@ uint32_t Leaf::GetIndex(uint32_t depth) const {
     return (leaf_index_ + 1)  - uint32_t(pow(2, depth));
 }
 
-uint32_t Leaf::ParentVectorIndex(uint32_t depth) const {
+uint32_t Leaf::ParentVectorIndex(uint32_t base) const {
     uint32_t parent_index = (leaf_index_ - 1) / 2;
-    return (parent_index + 1) - uint32_t(pow(2, depth - 1));
+    return (parent_index + 1) - base;
 }
     
 
