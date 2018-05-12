@@ -213,8 +213,6 @@ void Tree::FindSplit(const TrainDataset& dataset,
         }
     }
 
-        std::vector<float_type> left_weigths(leafs->size());
-        std::vector<float_type> right_weigts(leafs->size());
     for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
         float_type gain = 0;
         for(uint32_t leaf_number = 0; leaf_number < leafs->size();
@@ -226,14 +224,15 @@ void Tree::FindSplit(const TrainDataset& dataset,
         if(gain <= search_parameters.gain) {
             search_parameters.gain = gain;
             search_parameters.bin = bin_number;
-            for(uint32_t i = 0; i < leafs->size(); ++i) {
-                float_type& left = search_parameters.left_weigths[i];
-                float_type& right = search_parameters.right_weights[i];
-                std::tie(left, right) = 
-                     (*leafs)[i].CalculateSplitWeights(feature_number,
-                                                       bin_number);
-            }
         }
+    }
+
+    for(uint32_t i = 0; i < leafs->size(); ++i) {
+        float_type& left = search_parameters.left_weigths[i];
+        float_type& right = search_parameters.right_weights[i];
+        std::tie(left, right) = 
+             (*leafs)[i].CalculateSplitWeights(feature_number,
+                                               search_parameters.bin);
     }
 
     (*split_params)[feature_number] = search_parameters;
