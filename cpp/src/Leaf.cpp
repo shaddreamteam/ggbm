@@ -57,7 +57,17 @@ std::tuple<float_type, float_type> Histogram::CalculateSplitWeights(
     return std::make_tuple(weght_left, weight_right);
 }
 
-void Leaf::CalulateHistogram(uint32_t feature_number,
+Histogram Histogram::operator-(const Histogram& other) const {
+    Histogram new_hist(gradient_cs_, hessian_cs_, lambda_l2_reg_, empty_leaf_);
+    for(uint32_t i = 0; i < gradient_cs_.size(); ++i) {
+        new_hist.gradient_cs_[i] -= other.gradient_cs_[i];
+        new_hist.hessian_cs_[i] -= other.hessian_cs_[i];
+    }
+    return new_hist;
+}
+
+
+void Leaf::CalculateHistogram(uint32_t feature_number,
                              float_type lambda_l2_reg,
                              uint32_t bin_count,
                              const std::vector<bin_id>& feature_vector,
@@ -79,6 +89,16 @@ void Leaf::CalulateHistogram(uint32_t feature_number,
     }
     histograms_[feature_number] = 
         Histogram(gradient_sum, hessian_sum, lambda_l2_reg, false);
+}
+
+void Leaf::DiffHistogram(uint32_t feature_number, const Leaf& parent,
+                              const Leaf& sibling) {
+    histograms_[feature_number] = parent.histograms_.at(feature_number) - 
+        sibling.histograms_.at(feature_number);
+}
+
+void Leaf::CopyHistogram(uint32_t feature_number, const Leaf& parent) {
+    histograms_[feature_number] = parent.histograms_[feature_number];
 }
 
 Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
@@ -109,8 +129,14 @@ Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
 }
 
 uint32_t Leaf::GetIndex(uint32_t depth) const {
-    return leaf_index_ - uint32_t(pow(2, depth)) + 1;
+    return (leaf_index_ + 1)  - uint32_t(pow(2, depth));
 }
+
+uint32_t Leaf::ParentVectorIndex(uint32_t depth) const {
+    uint32_t parent_index = (leaf_index_ - 1) / 2;
+    return (parent_index + 1) - uint32_t(pow(2, depth - 1));
+}
+    
 
 bool Leaf::IsEmpty() const {
     return row_indexes_.empty();

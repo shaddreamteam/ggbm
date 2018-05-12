@@ -16,13 +16,20 @@ void Tree::Construct(const TrainDataset& dataset,
                      const std::vector<float_type>& hessians) {
     std::vector<uint32_t> indexes  = SampleRows(dataset.GetRowCount());
     std::vector<Leaf> leafs = {Leaf(0, 0, dataset.GetFeatureCount(), indexes)};
+    std::vector<Leaf> parents;
 
-    for(depth_ = 0; depth_ < config_.GetDepth(); ++depth_) {
+    uint8_t depth;
+    for(depth = 0; depth < config_.GetDepth(); ++depth) {
         std::vector<SearchParameters> split_params(dataset.GetFeatureCount());
         auto find_split = [&dataset, &leafs, &split_params,  &gradients, 
-                           &hessians, this]  (int32_t feature_number) {
-            FindSplit(dataset, gradients, hessians, feature_number, &leafs,
-                      &split_params);
+                           &hessians, &depth, &parents, this] 
+                               (int32_t feature_number) {
+            std::vector<Leaf>* parent_ptr = nullptr;
+            if(depth > 0) {
+                parent_ptr = &parents;
+            }
+            FindSplit(dataset, gradients, hessians, feature_number, depth,
+                      parent_ptr,  &leafs, &split_params);
         };
         TaskQueue<decltype(find_split), int32_t> 
             task_queue(config_.GetThreads(), &find_split);
@@ -45,10 +52,12 @@ void Tree::Construct(const TrainDataset& dataset,
         auto best_params = split_params[best_feature];
         split_params.clear();
         splits_.emplace_back(best_feature, best_params.bin);
+        parents.swap(leafs);
         leafs = MakeNewLeafs(dataset.GetFeatureVector(best_feature),
-                             leafs, best_params);
+                             parents, best_params);
     }
     
+    depth_ = depth;
     weights_ = std::vector<float_type>(uint32_t(pow(2, depth_)), 0);
     initialized_ = true;
 
@@ -164,6 +173,8 @@ void Tree::FindSplit(const TrainDataset& dataset,
                      const std::vector<float_type>& gradients,
                      const std::vector<float_type>& hessians,
                      uint32_t feature_number,
+                     uint32_t depth,
+                     const std::vector<Leaf>* parent_leafs,
                      std::vector<Leaf>* leafs,
                      std::vector<SearchParameters>* split_params) const {
     const std::vector<bin_id>& feature_vector =
@@ -171,10 +182,35 @@ void Tree::FindSplit(const TrainDataset& dataset,
     uint32_t bin_count = dataset.GetBinCount(feature_number);
     SearchParameters search_parameters;
 
-    for(Leaf& leaf : *leafs) {
-        leaf.CalulateHistogram(
-            feature_number, config_.GetLambdaL2(), bin_count,
-            feature_vector, gradients, hessians);
+    if(!parent_leafs) {
+        for(Leaf& leaf : *leafs) {
+            leaf.CalculateHistogram(
+                feature_number, config_.GetLambdaL2(), bin_count,
+                feature_vector, gradients, hessians);
+        }
+    } else {
+        for(uint32_t left_index = 0; left_index < (*leafs).size();
+                left_index += 2) {
+            Leaf* smaller = &(*leafs)[left_index];
+            Leaf* bigger = &(*leafs)[left_index + 1];
+            if(smaller->Size() > bigger->Size()) {
+                smaller = &(*leafs)[left_index + 1];
+                bigger = &(*leafs)[left_index];
+            }
+            
+            uint32_t parent_index = bigger->ParentVectorIndex(depth);
+            const Leaf& parent = (*parent_leafs)[parent_index];
+            if(smaller->Size() != 0) {
+                smaller->CalculateHistogram(
+                    feature_number, config_.GetLambdaL2(), bin_count,
+                    feature_vector, gradients, hessians);
+                bigger->DiffHistogram(feature_number, parent, *smaller);
+            } else {
+                if(bigger->Size() > 0) {
+                    bigger->CopyHistogram(feature_number, parent);
+                }
+            }
+        }
     }
 
     for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {

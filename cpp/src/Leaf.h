@@ -22,7 +22,7 @@ public:
 
     float_type CalculateSplitGain(bin_id bin_number) const;
     std::tuple<float_type, float_type> CalculateSplitWeights(bin_id bin_number) const;
-
+    Histogram operator-(const Histogram& other) const;
 private:
     std::vector<float_type> gradient_cs_;
     std::vector<float_type> hessian_cs_;
@@ -41,12 +41,17 @@ public:
         leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes),
         histograms_(n_features) {};
 
-    void CalulateHistogram(uint32_t feature_number,
+    void CalculateHistogram(uint32_t feature_number,
                            float_type lambda_l2_reg,
                            uint32_t bin_count,
                            const std::vector<bin_id>& feature_vector,
                            const std::vector<float_type>& gradients,
                            const std::vector<float_type>& hessians);
+ 
+    void DiffHistogram(uint32_t feature_number, const Leaf& parent, 
+                       const Leaf& sibling);
+
+    void CopyHistogram(uint32_t feature_number, const Leaf& parent);
 
     float_type CalculateSplitGain(uint32_t feature_number,
                                  bin_id bin_number) const;
@@ -58,11 +63,14 @@ public:
                    bin_id bin_number,  float_type left_weight) const;
  
     uint32_t GetIndex(uint32_t depth) const;
+    uint32_t ParentVectorIndex(uint32_t depth) const;
+
     bool IsEmpty() const;
     float_type GetWeight() const;
+    uint32_t Size() const { return row_indexes_.size(); };
 
-private:
     uint32_t leaf_index_;
+private:
     float_type weight_;
     std::vector<uint32_t> row_indexes_;
     std::vector<Histogram> histograms_;
