@@ -64,7 +64,7 @@ Histogram Histogram::operator-(const Histogram& other) const {
         new_hist.hessian_cs_[i] -= other.hessian_cs_[i];
     }
     return new_hist;
-}c
+}
 
 
 void Leaf::CalculateHistogram(uint32_t feature_number,

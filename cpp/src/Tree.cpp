@@ -82,10 +82,6 @@ std::vector<float_type> Tree::PredictFromDataset(const Dataset& dataset) const{
                 list_index = list_index * 2 + 2;
             }
         }
-        /*if (list_index - uint32_t(pow(2, depth_)) + 1 >= weights_.size() ||
-                list_index - uint32_t(pow(2, depth_)) + 1 < 0) {
-            std::cout << list_index - uint32_t(pow(2, depth_)) + 1 << std::endl;
-        }*/
         auto prediction = weights_[list_index - base + 1];
         predictions.push_back(prediction);
     }
