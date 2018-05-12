@@ -182,6 +182,8 @@ void Tree::FindSplit(const TrainDataset& dataset,
         dataset.GetFeatureVector(feature_number);
     uint32_t bin_count = dataset.GetBinCount(feature_number);
     SearchParameters search_parameters;
+    search_parameters.left_weigths = std::vector<float_type>(leafs->size(), 0);
+    search_parameters.right_weights= std::vector<float_type>(leafs->size(), 0);
 
     if(!parent_leafs) {
         for(Leaf& leaf : *leafs) {
@@ -214,25 +216,26 @@ void Tree::FindSplit(const TrainDataset& dataset,
         }
     }
 
-    for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
-        float_type gain = 0;
         std::vector<float_type> left_weigths(leafs->size());
         std::vector<float_type> right_weigts(leafs->size());
+    for(bin_id bin_number = 0; bin_number < bin_count; ++bin_number) {
+        float_type gain = 0;
         for(uint32_t leaf_number = 0; leaf_number < leafs->size();
                 ++leaf_number) {
             gain += (*leafs)[leaf_number].CalculateSplitGain(feature_number,
                                                              bin_number);
-            std::tie(left_weigths[leaf_number],
-                     right_weigts[leaf_number]) =
-                (*leafs)[leaf_number].CalculateSplitWeights(feature_number, 
-                                                         bin_number);
         }
 
         if(gain <= search_parameters.gain) {
             search_parameters.gain = gain;
             search_parameters.bin = bin_number;
-            search_parameters.left_weigths = left_weigths;
-            search_parameters.right_weights = right_weigts;
+            for(uint32_t i = 0; i < leafs->size(); ++i) {
+                float_type& left = search_parameters.left_weigths[i];
+                float_type& right = search_parameters.right_weights[i];
+                std::tie(left, right) = 
+                     (*leafs)[i].CalculateSplitWeights(feature_number,
+                                                       bin_number);
+            }
         }
     }
 
