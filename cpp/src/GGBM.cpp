@@ -22,8 +22,10 @@ void GGBM::Train(const TrainDataset& trainDataset) {
             trees_.push_back(tree);
             auto tree_predictions = tree.PredictFromDataset(trainDataset);
             optDataset.Update(trainDataset, tree_predictions, *loss);
-            std::cout << "Tree #" << tree_number << 
-                " constructed" << std::endl;
+            if (config_.GetVerbose()) {
+                std::cout << "Tree #" << tree_number <<
+                          " constructed" << std::endl;
+            }
         }
     }
 

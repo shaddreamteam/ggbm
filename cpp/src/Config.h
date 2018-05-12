@@ -53,6 +53,9 @@ public:
     const bool GetFileHasTarget() const {
         return params_.at("file_has_target");
     }
+    const bool GetVerbose() const {
+        return params_.at("verbose");
+    }
 private:
     std::unordered_map<std::string, ConfigValue> params_={
         {"mode", ConfigValue("", kString)},
@@ -69,6 +72,7 @@ private:
         {"row_subsampling", ConfigValue("1", kFloatType)},
         {"min_subsample", ConfigValue("1", kUint32_t)},
         {"file_has_target", ConfigValue("false", kBool)},
+        {"verbose", ConfigValue("false", kBool)},
     };
 };
 
