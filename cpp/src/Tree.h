@@ -54,10 +54,12 @@ private:
                                    const std::vector<Leaf>& leafs,
                                    const SearchParameters& best_params);
     void FindSplit(const TrainDataset& dataset,
-                   const std::vector<Leaf>& leafs,
                    const std::vector<float_type>& gradients,
                    const std::vector<float_type>& hessians,
                    uint32_t feature_number,
+                   uint32_t depth,
+                   const std::vector<Leaf>* parent_leafs,
+                   std::vector<Leaf>* leafs,
                    std::vector<SearchParameters>* split_params) const;
 };
 
