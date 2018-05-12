@@ -50,6 +50,14 @@ void Tree::Construct(const TrainDataset& dataset,
         }
 
         auto best_params = split_params[best_feature];
+        for(uint32_t i = 0; i < leafs.size(); ++i) {
+            float_type& left = best_params.left_weigths[i];
+            float_type& right = best_params.right_weights[i];
+            std::tie(left, right) = 
+                 leafs[i].CalculateSplitWeights(best_feature,
+                                                best_params.bin);
+        }
+
         split_params.clear();
         splits_.emplace_back(best_feature, best_params.bin);
         parents.swap(leafs);
@@ -225,14 +233,6 @@ void Tree::FindSplit(const TrainDataset& dataset,
             search_parameters.gain = gain;
             search_parameters.bin = bin_number;
         }
-    }
-
-    for(uint32_t i = 0; i < leafs->size(); ++i) {
-        float_type& left = search_parameters.left_weigths[i];
-        float_type& right = search_parameters.right_weights[i];
-        std::tie(left, right) = 
-             (*leafs)[i].CalculateSplitWeights(feature_number,
-                                               search_parameters.bin);
     }
 
     (*split_params)[feature_number] = search_parameters;
