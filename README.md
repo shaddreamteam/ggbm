@@ -17,3 +17,48 @@ Good game boosting machine
 Для экспериментов будут задействованы одинаковые наборы гиперпараметров (тк мы реализуем лишь незначительный набор регуляризаций и для сокращения возможного перебора гиперпараметров фреймворков-конкурентов утилиты).
 Эксперимент будет состоять в переборе гиперпараметров и последующей оценке качества с помощью кроссвалидации на 70% данных и затем обучения на этих 70% и оценке лучшей полученной в ходе кроссвалидации модели на 30% holdout выборке. Реализация кроссвалидации в утилите пока за рамками проекта.
 
+
+## Использование
+
+### Сборка
+В корне директории cpp:
+* mkdir build (если еще нет)
+* rm -rf build/*
+* cd build
+* cmake ..
+* make -j4
+* ./cpp parameters
+
+### Параметры
+* mode = [train, predict] - режим применения, для train если задан filename_test, то после обучения будет предсказание
+* filename_train - путь к файлу с данными для обучения, первой колонкой должен быть таргет
+* filename_test - путь к файлу с данными для предсказания
+* file_has_target = [0, 1] - есть ли в файле для предсказания колонка с таргетом
+* filename_model - путь к файлу модели для сохранения в режиме обучения или для загрузки в режиме предсказания
+* filename_output - путь к файлу для сохранения результатов предсказания
+* threads - количество используемых потоков
+* objective = [mse, logloss] - тип функции потерь
+* n_estimators - количество деревьев к построению
+* learning_rate - learning_rate
+* depth - глубина деревьев (деревья всегда строятся данной глубины)
+* lambda - L2 регуляризация на листьях
+* row_subsampling - доля случайной подвыборки датасета, которая используется при построении отдельного дерева
+* verbose = [0, 1] - выводить информацию о построении деревьев
+
+Пример запуска для обучения:
+./cpp mode=train threads=6 objective=logloss learning_rate=0.1 depth=6 n_estimators=400 lambda=0.0005 row_subsampling=1 filename_train=./test_model/train.csv filename_model=./test_model/model.bst
+Для применения
+./cpp mode=predict threads=6 filename_train=./test_model/test.csv filename_model=./test_model/model.bst filename_output=./test_model/output.csv
+
+
+## Предварительные результаты:
+Пока не успели провести полные тесты и еще кажется у нас сломалась параллельность :( (она работает, но ускоряет совсем не в n раз), поэтому пока предварительные результаты на 1 потоке в сравнении с lightgbm на higgs
+|          | Time (s) | Memory (kb)| Quality (logloss) |
+|----------|----------|------------|-------------------|
+| ggbm     | 37.53    | 32976      | 0.35312           |
+| lightgbm | 19.57    | 194848     | 0.35528           |
+
+команды запуска:
+./cpp  mode=train  threads=1 objective=logloss learning_rate=0.1 depth=6 n_estimators=400 lambda=0.0005 row_subsampling=1 filename_train=./test_model/train.csv filename_model=./test_model/model.bst
+lightgbm objective=binary data=./test_model/train.csv num_leaves=64 num_threads=1 num_iterations=400
+
