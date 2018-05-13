@@ -69,3 +69,7 @@ Good game boosting machine
 
 lightgbm objective=binary data=./test_model/train.csv num_leaves=64 num_threads=1 num_iterations=400
 
+Измерения:
+* Время: команда time
+* Память: команда time -f "%M"
+
