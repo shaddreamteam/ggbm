@@ -7,7 +7,6 @@
 #include <fstream>
 #include <memory>
 #include "Base.h"
-#include "dataset_stub.h"
 #include "FeatureTransformer.h"
 
 class Dataset {
