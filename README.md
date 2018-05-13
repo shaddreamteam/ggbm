@@ -53,10 +53,11 @@ Good game boosting machine
 
 ## Предварительные результаты:
 Пока не успели провести полные тесты и еще кажется у нас сломалась параллельность :( (она работает, но ускоряет совсем не в n раз), поэтому пока предварительные результаты на 1 потоке в сравнении с lightgbm на higgs
-|          | Time (s) | Memory (kb)| Quality (logloss) |
-|----------|----------|------------|-------------------|
-| ggbm     | 37.53    | 32976      | 0.35312           |
-| lightgbm | 19.57    | 194848     | 0.35528           |
+
+| framework | Time (s) | Memory (kb) | Quality (logloss) |
+| --------- | -------- | ----------- | ----------------- |
+| ggbm      | 37.53    | 32976       | 0.35312           |
+| lightgbm  | 19.57    | 194848      | 0.35528           |
 
 команды запуска:
 ./cpp  mode=train  threads=1 objective=logloss learning_rate=0.1 depth=6 n_estimators=400 lambda=0.0005 row_subsampling=1 filename_train=./test_model/train.csv filename_model=./test_model/model.bst
