@@ -60,8 +60,8 @@ Good game boosting machine
 
 | framework | Time (s) | Memory (kb) | Quality (logloss) |
 | --------- | -------- | ----------- | ----------------- |
-| ggbm      | 37.53    | 32976       | 0.35312           |
-| lightgbm  | 19.57    | 194848      | 0.35528           |
+| ggbm      | 16.54    | 32976       | 0.35312           |
+| lightgbm  | 10.48    | 194848      | 0.35528           |
 
 команды запуска:
 
