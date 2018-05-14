@@ -73,6 +73,7 @@ lightgbm objective=binary data=./test_model/train.csv num_leaves=64 num_threads=
 ./catboost fit -f data/higgs/train.csv --loss-function Logloss --cd ../cpp/data/catboost_descriptor  --delimiter ',' --iterations 400 --thread-count 1 --depth 7 --l2-leaf-reg 0.5 --learning-rate 0.
 
 Тесты на большом higgs (11М objects) в однопоточном режиме:
+
 | framework | Time (s) | Memory (kb) |
 | --------- | -------- | ----------- |
 | ggbm      | 615.60   | 1550332     |
