@@ -56,18 +56,28 @@ Good game boosting machine
 
 ## Предварительные результаты:
 
-Пока не успели провести полные тесты и еще кажется у нас сломалась параллельность :( (она работает, но ускоряет совсем не в n раз), поэтому пока предварительные результаты параметров обучения на 1 потоке в сравнении с lightgbm на higgs (0.7 train, 0.3 test)
+Пока не успели провести полные тесты и еще кажется у нас сломалась параллельность :( (она работает, но ускоряет совсем не в n раз), поэтому пока предварительные результаты параметров обучения на 1 потоке в сравнении с lightgbm и catboost на higgs с kaggle (250k objects) (0.7 train, 0.3 test)
 
 | framework | Time (s) | Memory (kb) | Quality (logloss) |
 | --------- | -------- | ----------- | ----------------- |
 | ggbm      | 16.54    | 32976       | 0.35312           |
 | lightgbm  | 10.48    | 194848      | 0.35528           |
+| catboost  | 40.21    | 103448      | 0.35226           |
 
 команды запуска:
 
 ./cpp  mode=train  threads=1 objective=logloss learning_rate=0.1 depth=6 n_estimators=400 lambda=0.0005 row_subsampling=1 filename_train=./test_model/train.csv filename_model=./test_model/model.bst
 
 lightgbm objective=binary data=./test_model/train.csv num_leaves=64 num_threads=1 num_iterations=400
+
+./catboost fit -f data/higgs/train.csv --loss-function Logloss --cd ../cpp/data/catboost_descriptor  --delimiter ',' --iterations 400 --thread-count 1 --depth 7 --l2-leaf-reg 0.5 --learning-rate 0.
+
+Тесты на большом higgs (11М objects) в однопоточном режиме:
+| framework | Time (s) | Memory (kb) |
+| --------- | -------- | ----------- |
+| ggbm      | 615.60   | 1550332     |
+| lightgbm  | 454.17   | 8916488     |
+
 
 Измерения:
 * Время: команда time
