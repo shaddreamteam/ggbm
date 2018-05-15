@@ -3,35 +3,18 @@
 #include <sstream>
 #include "Dataset.h"
 
-bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
-    return feature_bin_ids_[feature_number][row_number];
-}
-
-uint32_t Dataset::GetRowCount() const {
-    return feature_bin_ids_[0].size();
-}
-
-uint32_t Dataset::GetFeatureCount() const{
-    return feature_bin_ids_.size();
-}
-
-//std::vector<std::vector<bin_id>> Dataset::Transform(
-//    const std::vector<std::vector<float_type>>& feature_values) const{
-//    return ft_.Transform(feature_values);
-//}
-
-void Dataset::GetDataFromFile(std::string filename,
-                                         std::vector<std::vector<float_type>>& feature_values,
-                                         bool hasTarget,
-                                         std::vector<float_type>* targets,
-                                         char sep) const{
+void CSVReader::GetDataFromFile(std::string filename,
+                                std::vector<std::vector<float_type>>* feature_values,
+                                bool hasTarget,
+                                std::vector<float_type>* targets,
+                                char sep) const {
 
     // read data from file and store it into feature_values and targets
     // feature_values -- vector of feature columns, n_features x n_samples
     // targets -- optional, vector of taget values, n_samples
     // sep -- optional, ',' or '\t'
 
-    std::ifstream file(filename);  
+    std::ifstream file(filename);
     std::string line;
 
     if(sep=='\0') {
@@ -46,12 +29,12 @@ void Dataset::GetDataFromFile(std::string filename,
     }
 
     while(std::getline(file, line)) {
-        if(feature_values.empty()) {
+        if(feature_values->empty()) {
             size_t n = std::count(line.begin(), line.end(), sep);
             if(!hasTarget) {
                 ++n;
             }
-            feature_values.resize(n);
+            feature_values->resize(n);
         }
         std::istringstream ss(line);
         std::string token;
@@ -65,42 +48,55 @@ void Dataset::GetDataFromFile(std::string filename,
 
         size_t idx = 0;
         while(std::getline(ss, token, sep)) {
-            feature_values[idx].push_back(std::stof(token));
+            feature_values->at(idx).push_back(std::stof(token));
             ++idx;
         }
     }
 }
-
-TrainDataset::TrainDataset(const std::string& filename,
-                           std::shared_ptr<FeatureTransformer> ft) {
-    std::vector<std::vector<float_type>> data_x;
-    GetDataFromFile(filename, data_x, true, &targets_);
-    feature_bin_ids_ = ft->FitTransform(data_x);
-    bin_counts_ = std::vector<uint32_t>(feature_bin_ids_.size(), 0);
-    for(uint32_t i = 0; i < bin_counts_.size(); ++i) {
-        bin_counts_[i] = ft->GetBinCount(i);
+Dataset::Dataset(const std::vector<std::vector<bin_id>>& row_bin_ids,
+                 const std::vector<uint32_t> bin_counts,
+                 const std::vector<float_type>* targets) : bin_counts_(bin_counts) {
+    row_count_ = row_bin_ids.size();
+    feature_count_ = row_bin_ids[0].size();
+    data_rows_ = (DataRow *) calloc(row_count_, sizeof(DataRow));
+    for (int32_t row_index = 0; row_index < row_count_; ++row_index) {
+        data_rows_[row_index].bin_ids = (bin_id *) calloc(feature_count_, sizeof(bin_id));
+        for (int32_t feature_index = 0; feature_index < feature_count_; ++feature_index) {
+            data_rows_[row_index].bin_ids[feature_index] = row_bin_ids[row_index][feature_index];
+        }
+        if (targets) {
+            data_rows_[row_index].target = targets->at(row_index);
+        }
     }
-    // std::cout << "Train dataset initialized" << std::endl;
+};
+
+Dataset::~Dataset() {
+    for (int32_t row_index = 0; row_index < row_count_; ++row_index) {
+        free(data_rows_[row_index].bin_ids);
+    }
+    free(data_rows_);
 }
 
-float_type TrainDataset::GetTarget(uint32_t row_number) const {
-    return targets_[row_number];
+void Dataset::SetBasePrediction(float_type base_prediction) {
+    for (uint32_t i = 0; i < GetRowCount(); ++i) {
+        data_rows_[i].prediction = base_prediction;
+    }
 }
 
-uint32_t TrainDataset::GetBinCount(uint32_t feature_number) const {
-    return bin_counts_[feature_number];
+DataRow* Dataset::GetData() {
+    return data_rows_;
 }
 
-const std::vector<bin_id>& TrainDataset::GetFeatureVector(
-        uint32_t feature_number) const {
-    return feature_bin_ids_.at(feature_number);
+uint32_t Dataset::GetRowCount() const {
+    return row_count_;
 }
 
-TestDataset::TestDataset(const std::string& filename,
-                         const std::shared_ptr<FeatureTransformer> ft,
-                         bool file_has_target) {
-    std::vector<std::vector<float_type>> data_x;
-    GetDataFromFile(filename, data_x, file_has_target, nullptr);
-    feature_bin_ids_ = ft->Transform(data_x);
+uint32_t Dataset::GetFeatureCount() const{
+    return feature_count_;
 }
+
+const std::vector<uint32_t>& Dataset::GetBinCounts() const {
+    return bin_counts_;
+}
+
 

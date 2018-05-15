@@ -7,43 +7,21 @@
 
 class Loss {
 public:
-    virtual std::vector<float_type> GetGradients(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const = 0;
+    virtual void SetGradientsAndHessians(Dataset* dataset) = 0;
 
-    virtual std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const = 0;
+    virtual void SetFirstPrediction(Dataset* dataset) = 0;
 
-    virtual float_type GetFirstPrediction(
-            const TrainDataset& dataset) const = 0;
-
-    virtual float_type GetLoss(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const = 0;
-
-protected:
-    void check_correct_input(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    virtual float_type GetLoss(Dataset* dataset) const = 0;
 };
 
 class MSE : public Loss {
 public:
     MSE() {};
-    std::vector<float_type> GetGradients(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    void SetGradientsAndHessians(Dataset* dataset);
 
-    std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    void SetFirstPrediction(Dataset* dataset);
 
-    float_type GetFirstPrediction(const TrainDataset& dataset) const;
-
-    float_type GetLoss(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    float_type GetLoss(Dataset* dataset) const;
 };
 
 float_type Sigmoid(float_type logit);
@@ -51,18 +29,10 @@ float_type Sigmoid(float_type logit);
 class LogLoss : public Loss {
 public:
     LogLoss() {};
-    std::vector<float_type> GetGradients(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    void SetGradientsAndHessians(Dataset* dataset);
 
-    std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    void SetFirstPrediction(Dataset* dataset);
 
-    float_type GetFirstPrediction(const TrainDataset& dataset) const;
-
-    float_type GetLoss(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+    float_type GetLoss(Dataset* dataset) const;
 };
 #endif //LOSS_H

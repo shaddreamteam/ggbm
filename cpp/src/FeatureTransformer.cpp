@@ -53,15 +53,15 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
         throw std::runtime_error("Not initialized");
     }
     std::vector<std::vector<bin_id>> transform_res;
-    transform_res.resize(feature_values.size());
+    transform_res.resize(feature_values[0].size(), std::vector<bin_id>(feature_values.size()));
 
     auto transform_vector = [&feature_values, &transform_res, this](int32_t j) {
-        transform_res[j].reserve(feature_values[j].size());
-        for (auto value: feature_values[j]) {
+        for (uint32_t row_index = 0; row_index < feature_values[j].size(); ++row_index) {
             bin_id bin = std::upper_bound(this->bin_upper_bounds_[j].begin(),
                                           this->bin_upper_bounds_[j].end(),
-                                          value) - this->bin_upper_bounds_[j].begin();
-            transform_res[j].push_back(bin);
+                                          feature_values[j][row_index]) -
+                                              this->bin_upper_bounds_[j].begin();
+            transform_res[row_index][j] = bin;
         }
     };
 
@@ -148,8 +148,12 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
     return bin_upper_bound;
 }
 
-uint32_t FeatureTransformer::GetBinCount(uint32_t feature_number) const {
-    return bin_upper_bounds_[feature_number].size();
+std::vector<uint32_t> FeatureTransformer::GetBinCounts() const {
+    std::vector<uint32_t> bin_counts;
+    for (uint32_t feature_number = 0; feature_number < bin_upper_bounds_.size(); ++feature_number) {
+        bin_counts.push_back(bin_upper_bounds_[feature_number].size());
+    }
+    return bin_counts;
 }
 
 void FeatureTransformer::Save(std::ofstream& stream) {

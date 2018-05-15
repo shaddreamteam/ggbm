@@ -6,45 +6,53 @@
 #include <istream>
 #include <fstream>
 #include <memory>
+#include <array>
 #include "Base.h"
 #include "FeatureTransformer.h"
 
-class Dataset {
+class CSVReader {
 public:
-    bin_id GetFeature(uint32_t row_number, uint32_t feature_number) const;
-    uint32_t GetRowCount() const;
-    uint32_t GetFeatureCount() const;
+    CSVReader() = default;
 
-protected:
-    std::vector<std::vector<bin_id>> feature_bin_ids_;
- 
-    Dataset() {};
     void GetDataFromFile(std::string filename,
-                         std::vector<std::vector<float_type>>& feature_values,
-                         bool isTargetFirst,
+                         std::vector<std::vector<float_type>>* feature_values,
+                         bool hasTarget,
                          std::vector<float_type>* targets=nullptr,
                          char sep='\0') const;
+
 };
 
-class TrainDataset : public Dataset {
-public:
-    TrainDataset(const std::string& filename,
-                 std::shared_ptr<FeatureTransformer> ft);
+struct DataRow {
+    uint32_t leaf_index;
+    float_type gradient;
+    float_type hessian;
+    float_type prediction;
+    float_type target;
+    bin_id* bin_ids;
+};
 
-    float_type GetTarget(uint32_t row_number) const;
-    uint32_t GetBinCount(uint32_t feature_number) const;
-    const std::vector<bin_id>& GetFeatureVector(uint32_t feature_number) const;
+
+class Dataset {
+public:
+    Dataset(const std::vector<std::vector<bin_id>>& row_bin_ids,
+            const std::vector<uint32_t> bin_counts,
+            const std::vector<float_type>* targets);
+
+    ~Dataset();
+
+    void SetBasePrediction(float_type base_prediction);
+
+    DataRow* GetData();
+
+    uint32_t GetRowCount() const;
+    uint32_t GetFeatureCount() const;
+    const std::vector<uint32_t>& GetBinCounts() const;
 
 private:
-    std::vector<float_type> targets_;
-    std::vector<uint32_t> bin_counts_;
-};
-
-class TestDataset : public Dataset {
-public:
-    TestDataset(const std::string& filename,
-                const std::shared_ptr<FeatureTransformer> ft,
-                bool file_has_target);
+    DataRow* data_rows_;
+    uint32_t row_count_;
+    uint32_t feature_count_;
+    const std::vector<uint32_t> bin_counts_;
 };
 
 

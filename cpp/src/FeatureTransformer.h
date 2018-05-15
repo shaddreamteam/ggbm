@@ -17,8 +17,8 @@ public:
 
     std::vector<std::vector<bin_id>>
     Transform(const std::vector<std::vector<float_type>>& feature_values) const;
-    
-    uint32_t GetBinCount(uint32_t feature_number) const;
+
+    std::vector<uint32_t> GetBinCounts() const;
 
     void Save(std::ofstream& stream);
     void Load(std::ifstream& stream);

@@ -1,47 +1,49 @@
 #include "GGBM.h"
 
 
-void GGBM::Train(const TrainDataset& trainDataset) {
+void GGBM::Train(Dataset* train_dataset) {
     Loss* loss;
+    auto data = train_dataset->GetData();
     if (config_.GetObjective() == kMse) {
         loss = new MSE();
     } else {
         loss = new LogLoss();
     }
-    base_prediction_ = loss->GetFirstPrediction(trainDataset);
-    std::vector<float_type> predictions(trainDataset.GetRowCount(),
-                                        base_prediction_);
-    OptData optDataset(trainDataset, predictions, *loss);
+    loss->SetFirstPrediction(train_dataset);
+    loss->SetGradientsAndHessians(train_dataset);
 
-    for(uint32_t tree_number = 0; tree_number < config_.GetNEstimators();
-            ++tree_number) {
+    for(uint32_t tree_number = 0; tree_number < config_.GetNEstimators(); ++tree_number) {
         Tree tree(config_);
-        tree.Construct(trainDataset, optDataset.GetGradients(), optDataset.GetHessians());
+        tree.Construct(train_dataset);
 
         if(tree.IsInitialized()) {
             trees_.push_back(tree);
-            auto tree_predictions = tree.PredictFromDataset(trainDataset);
-            optDataset.Update(trainDataset, tree_predictions, *loss);
-            if (config_.GetVerbose()) {
+            tree.UpdatePredictions(train_dataset);
+            // TODO update loss in parallel
+            loss->SetGradientsAndHessians(train_dataset);
+
+            //if (config_.GetVerbose()) {
                 std::cout << "Tree #" << tree_number <<
                           " constructed" << std::endl;
-            }
+            //}
         }
     }
 
     delete loss;
 }
 
-std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
-    std::vector<float_type> predictions(dataset.GetRowCount(),
+std::vector<float_type> GGBM::PredictFromDataset(Dataset* dataset) const {
+    std::vector<float_type> predictions(dataset->GetRowCount(),
                                         base_prediction_);
+    auto data = dataset->GetData();
     for(const Tree& tree : trees_) {
-        std::vector<float_type> treePredictions =
-            tree.PredictFromDataset(dataset);
-        for(uint32_t i = 0; i < predictions.size(); ++i) {
-            predictions[i] += treePredictions[i];
-        }
+        tree.UpdatePredictions(dataset);
     }
+
+    for (uint32_t row_number; row_number < dataset->GetRowCount(); ++row_number) {
+        predictions[row_number] += data[row_number].prediction;
+    }
+
     if(objective_ == kLogLoss) {
         for(float_type& p : predictions) {
             p = Sigmoid(p);

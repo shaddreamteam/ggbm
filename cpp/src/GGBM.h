@@ -20,9 +20,9 @@ public:
             objective_(config.GetObjective()),
             feature_transformer_(std::make_shared<FeatureTransformer>(config)) {};
 
-    void Train(const TrainDataset& trainDataset);
+    void Train(Dataset* train_dataset);
 
-    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
+    std::vector<float_type> PredictFromDataset(Dataset* dataset) const;
 
     void Save(std::ofstream& stream);
     void Load(std::ifstream& stream);

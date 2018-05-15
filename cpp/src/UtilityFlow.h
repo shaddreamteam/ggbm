@@ -38,17 +38,33 @@ private:
     }
 
     void TrainModel(Config& cfg, GGBM* ggbm) {
-        TrainDataset dataset(cfg.GetTrainFilename(), ggbm->GetFeatureTransformer());
-        ggbm->Train(dataset);
+        CSVReader cr;
+        std::vector<std::vector<float_type>> feature_values;
+        std::vector<float_type> targets;
+        cr.GetDataFromFile(cfg.GetTrainFilename(), &feature_values, true, &targets);
+        auto ft = ggbm->GetFeatureTransformer();
+        auto row_bin_ids = ft->FitTransform(feature_values);
+        feature_values.clear();
+        Dataset train_dataset(row_bin_ids, ft->GetBinCounts(), &targets);
+        ggbm->Train(&train_dataset);
         std::ofstream out_model_file(cfg.GetModelFilename());
         ggbm->Save(out_model_file);
     }
 
     void MakePrediction(Config& cfg, GGBM* ggbm) {
-        TestDataset test(cfg.GetTestFilename(),
-                         ggbm->GetFeatureTransformer(),
-                         cfg.GetFileHasTarget());
-        auto preds = ggbm->PredictFromDataset(test);
+        CSVReader cr;
+        std::vector<std::vector<float_type>> feature_values;
+        std::vector<float_type> targets;
+        cr.GetDataFromFile(cfg.GetTestFilename(),
+                           &feature_values,
+                           cfg.GetFileHasTarget(),
+                           &targets);
+        auto ft = ggbm->GetFeatureTransformer();
+        auto row_bin_ids = ft->FitTransform(feature_values);
+        feature_values.clear();
+        Dataset test_dataset(row_bin_ids, ft->GetBinCounts(), nullptr);
+
+        auto preds = ggbm->PredictFromDataset(&test_dataset);
 
         std::ofstream stream(cfg.GetOutputFilename());
         for(int i = 0; i < preds.size() - 1; ++i) {

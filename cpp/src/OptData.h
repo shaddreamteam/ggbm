@@ -1,4 +1,4 @@
-#ifndef OPT_DATA_H
+/*#ifndef OPT_DATA_H
 #define OPT_DATA_H
 #include <vector>
 #include "Base.h"
@@ -23,4 +23,4 @@ private:
     std::vector<float_type> hessians_;
     std::vector<float_type> predictions_;
 };
-#endif //OPT_DATA_H
+#endif //OPT_DATA_H*/

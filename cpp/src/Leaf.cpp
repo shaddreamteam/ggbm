@@ -2,8 +2,8 @@
 #include <cmath>
 
 
-float_type Histogram::CalculateGain(float_type gradient,
-                                    float_type hessian) const {
+float_type Leaf::CalculateGain(float_type gradient,
+                               float_type hessian) const {
     float_type denominator = hessian + lambda_l2_reg_;
     float_type gain = 0;
     if(denominator != 0) {
@@ -12,8 +12,8 @@ float_type Histogram::CalculateGain(float_type gradient,
     return gain;
 }
 
-float_type Histogram::CalculateWeight(float_type gradient,
-                                      float_type hessian) const {
+float_type Leaf::CalculateWeight(float_type gradient,
+                                 float_type hessian) const {
     float_type denominator = hessian + lambda_l2_reg_;
     float_type weight = 0;
     if(denominator != 0) {
@@ -22,64 +22,28 @@ float_type Histogram::CalculateWeight(float_type gradient,
     return weight;
 }
 
-float_type Histogram::CalculateSplitGain(bin_id bin_number) const {
-    if(empty_leaf_) {
-        return 0;
-    }
-    float_type gain_left = CalculateGain(gradient_cs_[bin_number],
-                                         hessian_cs_[bin_number]);
-
-    float_type right_gradient_sum = gradient_cs_.back() - 
-        gradient_cs_[bin_number];
-    float_type right_hessian_sum = hessian_cs_.back() -
-        hessian_cs_[bin_number];
-    float_type gain_right = CalculateGain(right_gradient_sum,
-                                          right_hessian_sum);
-
-    return gain_left + gain_right;
-}
-
-std::tuple<float_type, float_type> Histogram::CalculateSplitWeights(
-        bin_id bin_number) const {
-    if(empty_leaf_) {
-        return std::make_tuple(0, 0);
-    }
-    float_type weght_left = CalculateWeight(gradient_cs_[bin_number],
-                                            hessian_cs_[bin_number]);
-
-    float_type right_gradient_sum = gradient_cs_.back() - 
-        gradient_cs_[bin_number];
-    float_type right_hessian_sum = hessian_cs_.back() -
-        hessian_cs_[bin_number];
-    float_type weight_right = CalculateWeight(right_gradient_sum, 
-                                              right_hessian_sum);
-
-    return std::make_tuple(weght_left, weight_right);
-}
-
 Histogram Histogram::operator-(const Histogram& other) const {
-    Histogram new_hist(gradient_cs_, hessian_cs_, lambda_l2_reg_, empty_leaf_,
-            bin_count_);
-    for(uint32_t i = 0; i < gradient_cs_.size(); ++i) {
+    Histogram new_hist;
+    /*for(uint32_t i = 0; i < gradient_cs_.size(); ++i) {
         new_hist.gradient_cs_[i] -= other.gradient_cs_[i];
         new_hist.hessian_cs_[i] -= other.hessian_cs_[i];
-    }
+    }*/
     return new_hist;
 }
 
 
-void Leaf::CalculateHistogram(uint32_t feature_number,
+/*void Leaf::CalculateHistogram(uint32_t feature_number,
                              float_type lambda_l2_reg,
                              uint32_t bin_count,
                              const std::vector<bin_id>& feature_vector,
                              const std::vector<float_type>& gradients,
                              const std::vector<float_type>& hessians) {
-    if(row_indexes_.empty()) {
+    if(row_indices_.empty()) {
         return;
     }
     std::vector<float_type> gradient_sum(bin_count, 0);
         std::vector<float_type> hessian_sum(bin_count, 0);
-    for(uint32_t index : row_indexes_) {
+    for(uint32_t index : row_indices_) {
         bin_id bin_number = feature_vector[index];
         gradient_sum[bin_number] += gradients[index];
         hessian_sum[bin_number] += hessians[index];
@@ -90,34 +54,26 @@ void Leaf::CalculateHistogram(uint32_t feature_number,
     }
     histograms_[feature_number] = 
         Histogram(gradient_sum, hessian_sum, lambda_l2_reg, false, bin_count);
-}
+}*/
 
 void Leaf::DiffHistogram(uint32_t feature_number, const Leaf& parent,
                               const Leaf& sibling) {
-    histograms_[feature_number] = parent.histograms_.at(feature_number) - 
-        sibling.histograms_.at(feature_number);
+    histograms_[feature_number] = parent.histograms_[feature_number] -
+            sibling.histograms_[feature_number];
 }
 
 void Leaf::CopyHistogram(uint32_t feature_number, const Leaf& parent) {
     histograms_[feature_number] = parent.histograms_[feature_number];
 }
 
-Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
-                     bin_id bin_number, float_type weight) const {
-    std::vector<uint32_t> child_rows(0);
-    for(uint32_t index : row_indexes_) {
-        bool belongs_left = feature_vector[index] <= bin_number;
-        if(belongs_left && is_left || !belongs_left && !is_left) {
-            child_rows.push_back(index);
-        }
-    }
-
-    uint32_t child_hist_size = histograms_.size();
-    if(child_rows.empty()) {
-        weight = weight_;
-        child_hist_size = 0;
-    }
-
+Leaf Leaf::MakeChild(bool is_left,
+                     Dataset* dataset,
+                     uint32_t feature_number,
+                     bin_id bin_number,
+                     float_type weight,
+                     uint32_t depth) const {
+    std::vector<uint32_t> child_rows;
+    auto data = dataset->GetData();
     uint32_t child_index;
     if(is_left) {
         child_index = leaf_index_ * 2 + 1;
@@ -125,7 +81,21 @@ Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
         child_index = leaf_index_ * 2 + 2;
     }
 
-    Leaf child(child_index, weight, child_hist_size, child_rows);
+    for(uint32_t index : row_indices_) {
+        bool belongs_left = data[index].bin_ids[feature_number] <= bin_number;
+        if(belongs_left == is_left) {
+            child_rows.push_back(index);
+            data[index].leaf_index = (child_index + 1)  - uint32_t(pow(2, depth + 1));
+        }
+    }
+
+    uint32_t child_hist_size = histogram_count_;
+    if(child_rows.empty()) {
+        weight = weight_;
+        child_hist_size = 0;
+    }
+
+    Leaf child(child_index, weight, child_hist_size, child_rows, bin_counts_, lambda_l2_reg_);
     return child;
 }
 
@@ -140,7 +110,7 @@ uint32_t Leaf::ParentVectorIndex(uint32_t base) const {
     
 
 bool Leaf::IsEmpty() const {
-    return row_indexes_.empty();
+    return row_indices_.empty();
 }
 
 float_type Leaf::GetWeight() const {
@@ -150,16 +120,48 @@ float_type Leaf::GetWeight() const {
 
 float_type Leaf::CalculateSplitGain(uint32_t feature_number, 
                                     bin_id bin_number) const {
-    if(row_indexes_.empty()) {
+    if(row_indices_.empty()) {
         return 0;
     }
-    return histograms_[feature_number].CalculateSplitGain(bin_number);
+
+    float_type gain_left = CalculateGain(
+            histograms_[feature_number].gradients_hessians[bin_number].gradient,
+            histograms_[feature_number].gradients_hessians[bin_number].hessian);
+
+    auto bin_count = bin_counts_[feature_number];
+
+    float_type right_gradient_sum =
+            histograms_[feature_number].gradients_hessians[bin_count - 1].gradient -
+            histograms_[feature_number].gradients_hessians[bin_number].gradient;
+    float_type right_hessian_sum =
+            histograms_[feature_number].gradients_hessians[bin_count - 1].hessian -
+            histograms_[feature_number].gradients_hessians[bin_number].hessian;
+    float_type gain_right = CalculateGain(right_gradient_sum,
+                                          right_hessian_sum);
+
+    return gain_left + gain_right;
 }
 
-std::tuple<float_type, float_type> Leaf::CalculateSplitWeights(
-            uint32_t feature_number, bin_id bin_number) const {
-    if(row_indexes_.empty()) {
-        return std::make_tuple(0, 0);
+std::tuple<float_type, float_type> Leaf::CalculateSplitWeights(uint32_t feature_number,
+                                                               bin_id bin_number) const {
+    if(row_indices_.empty()) {
+        return std::make_tuple(0.f, 0.f);
     }
-    return histograms_[feature_number].CalculateSplitWeights(bin_number);
+
+    float_type weight_left = CalculateWeight(
+            histograms_[feature_number].gradients_hessians[bin_number].gradient,
+            histograms_[feature_number].gradients_hessians[bin_number].hessian);
+
+    auto bin_count = bin_counts_[feature_number];
+
+    float_type right_gradient_sum =
+            histograms_[feature_number].gradients_hessians[bin_count].gradient -
+            histograms_[feature_number].gradients_hessians[bin_number].gradient;
+    float_type right_hessian_sum =
+            histograms_[feature_number].gradients_hessians[bin_count].hessian -
+            histograms_[feature_number].gradients_hessians[bin_number].hessian;
+    float_type weight_right = CalculateWeight(right_gradient_sum,
+                                              right_hessian_sum);
+
+    return std::make_tuple(weight_left, weight_right);
 }

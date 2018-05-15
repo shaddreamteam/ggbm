@@ -1,11 +1,12 @@
+/*
 #include "OptData.h"
 
 OptData::OptData(const TrainDataset& dataset,
                  const std::vector<float_type>& predictions,
                  const Loss& loss): 
         predictions_(predictions) {
-    hessians_ = loss.GetHessians(dataset, predictions);
-    gradients_ = loss.GetGradients(dataset, predictions);
+    hessians_ = loss.SetHessians(dataset);
+    gradients_ = loss.SetGradientsAndHessians(dataset);
 }
 
 const std::vector<float_type>& OptData::GetGradients() const {
@@ -26,6 +27,7 @@ void OptData::Update(const TrainDataset& dataset,
     for(uint32_t i = 0; i < predictions_.size(); ++i) {
        predictions_[i] += increment_predictions[i];
     }
-    hessians_ = loss.GetHessians(dataset, predictions_);
-    gradients_ = loss.GetGradients(dataset, predictions_);
+    hessians_ = loss.SetHessians(dataset);
+    gradients_ = loss.SetGradientsAndHessians(dataset);
 }
+*/

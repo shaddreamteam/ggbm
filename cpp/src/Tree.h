@@ -19,6 +19,18 @@ struct SearchParameters {
     std::vector<float_type> right_weights;
 };
 
+struct ThreadParameters{
+    ThreadParameters(uint32_t thread_id,
+                     uint32_t index_interval_start,
+                     uint32_t index_interval_end) :
+            thread_id(thread_id),
+            index_interval_start(index_interval_start),
+            index_interval_end(index_interval_end) {}
+    uint32_t thread_id;
+    uint32_t index_interval_start;
+    uint32_t index_interval_end;
+};
+
 class Tree {
 public:
     struct Split {
@@ -31,11 +43,9 @@ public:
 
     Tree(const Config& config) : initialized_(false), config_(config) {};
 
-    void Construct(const TrainDataset& dataset,
-                   const std::vector<float_type>& gradients,
-                   const std::vector<float_type>& hessians);
+    void Construct(Dataset* dataset);
 
-    std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
+    void UpdatePredictions(Dataset* dataset) const;
 
     bool IsInitialized() const;
 
@@ -50,17 +60,20 @@ private:
     std::vector<float_type> weights_;
 
     std::vector<uint32_t> SampleRows(uint32_t n_rows) const;
-    std::vector<Leaf> MakeNewLeafs(std::vector<bin_id> feature_vector,
-                                   const std::vector<Leaf>& leafs,
-                                   const SearchParameters& best_params);
-    void FindSplit(const TrainDataset& dataset,
-                   const std::vector<float_type>& gradients,
-                   const std::vector<float_type>& hessians,
-                   uint32_t feature_number,
+    void MakeNewLeafs(Dataset* dataset,
+                            const std::vector<Leaf>& leafs,
+                            uint32_t feature_number,
+                            const SearchParameters& best_params,
+                            std::vector<Leaf>* children,
+                            uint32_t depth);
+
+    void FindSplit(Dataset* dataset,
+                   const std::vector<uint32_t>& indices,
+                   ThreadParameters thread_params,
                    uint32_t depth,
                    const std::vector<Leaf>* parent_leafs,
                    std::vector<Leaf>* leafs,
-                   std::vector<SearchParameters>* split_params) const;
+                   std::vector<SearchParameters>* split_params);
 };
 
 #endif //CPP_TREE_H
