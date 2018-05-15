@@ -45,11 +45,11 @@ public:
         histograms_(n_features) {};
 
     void CalculateHistogram(uint32_t feature_number,
-                           float_type lambda_l2_reg,
-                           uint32_t bin_count,
-                           const std::vector<bin_id>& feature_vector,
-                           const std::vector<float_type>& gradients,
-                           const std::vector<float_type>& hessians);
+                            float_type lambda_l2_reg,
+                            uint32_t bin_count,
+                            const bin_id* feature_vector,
+                            const std::vector<float_type>& gradients,
+                            const std::vector<float_type>& hessians);
  
     void DiffHistogram(uint32_t feature_number, const Leaf& parent, 
                        const Leaf& sibling);
@@ -62,8 +62,8 @@ public:
     std::tuple<float_type, float_type> CalculateSplitWeights(
             uint32_t feature_number, bin_id bin_number) const;
 
-    Leaf MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
-                   bin_id bin_number,  float_type left_weight) const;
+    Leaf MakeChild(bool is_left, const bin_id* feature_vector,
+                   bin_id bin_number, float_type left_weight) const;
  
     uint32_t GetIndex(uint32_t depth) const;
     uint32_t ParentVectorIndex(uint32_t base) const;

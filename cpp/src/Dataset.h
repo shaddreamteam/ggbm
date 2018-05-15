@@ -16,14 +16,19 @@ public:
     uint32_t GetFeatureCount() const;
 
 protected:
-    std::vector<std::vector<bin_id>> feature_bin_ids_;
+    bin_id* feature_bin_ids_;
+    uint32_t row_count_;
+    uint32_t feature_count_;
  
     Dataset() {};
+    ~Dataset() {
+        free(feature_bin_ids_);
+    }
     void GetDataFromFile(std::string filename,
                          std::vector<std::vector<float_type>>& feature_values,
                          bool isTargetFirst,
                          std::vector<float_type>* targets=nullptr,
-                         char sep='\0') const;
+                         char sep='\0');
 };
 
 class TrainDataset : public Dataset {
@@ -33,7 +38,7 @@ public:
 
     float_type GetTarget(uint32_t row_number) const;
     uint32_t GetBinCount(uint32_t feature_number) const;
-    const std::vector<bin_id>& GetFeatureVector(uint32_t feature_number) const;
+    const bin_id* GetFeatureVector(uint32_t feature_number) const;
 
 private:
     std::vector<float_type> targets_;

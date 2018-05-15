@@ -4,15 +4,15 @@
 #include "Dataset.h"
 
 bin_id Dataset::GetFeature(uint32_t row_number, uint32_t feature_number) const {
-    return feature_bin_ids_[feature_number][row_number];
+    return feature_bin_ids_[feature_number * row_count_ + row_number];
 }
 
 uint32_t Dataset::GetRowCount() const {
-    return feature_bin_ids_[0].size();
+    return row_count_;
 }
 
 uint32_t Dataset::GetFeatureCount() const{
-    return feature_bin_ids_.size();
+    return feature_count_;
 }
 
 //std::vector<std::vector<bin_id>> Dataset::Transform(
@@ -24,7 +24,7 @@ void Dataset::GetDataFromFile(std::string filename,
                                          std::vector<std::vector<float_type>>& feature_values,
                                          bool hasTarget,
                                          std::vector<float_type>* targets,
-                                         char sep) const{
+                                         char sep) {
 
     // read data from file and store it into feature_values and targets
     // feature_values -- vector of feature columns, n_features x n_samples
@@ -69,6 +69,9 @@ void Dataset::GetDataFromFile(std::string filename,
             ++idx;
         }
     }
+
+    row_count_ = feature_values[0].size();
+    feature_count_ = feature_values.size();
 }
 
 TrainDataset::TrainDataset(const std::string& filename,
@@ -76,7 +79,7 @@ TrainDataset::TrainDataset(const std::string& filename,
     std::vector<std::vector<float_type>> data_x;
     GetDataFromFile(filename, data_x, true, &targets_);
     feature_bin_ids_ = ft->FitTransform(data_x);
-    bin_counts_ = std::vector<uint32_t>(feature_bin_ids_.size(), 0);
+    bin_counts_ = std::vector<uint32_t>(data_x.size(), 0);
     for(uint32_t i = 0; i < bin_counts_.size(); ++i) {
         bin_counts_[i] = ft->GetBinCount(i);
     }
@@ -91,9 +94,9 @@ uint32_t TrainDataset::GetBinCount(uint32_t feature_number) const {
     return bin_counts_[feature_number];
 }
 
-const std::vector<bin_id>& TrainDataset::GetFeatureVector(
+const bin_id* TrainDataset::GetFeatureVector(
         uint32_t feature_number) const {
-    return feature_bin_ids_.at(feature_number);
+    return feature_bin_ids_ + feature_number * row_count_;
 }
 
 TestDataset::TestDataset(const std::string& filename,

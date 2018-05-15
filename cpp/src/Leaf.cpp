@@ -69,11 +69,11 @@ Histogram Histogram::operator-(const Histogram& other) const {
 
 
 void Leaf::CalculateHistogram(uint32_t feature_number,
-                             float_type lambda_l2_reg,
-                             uint32_t bin_count,
-                             const std::vector<bin_id>& feature_vector,
-                             const std::vector<float_type>& gradients,
-                             const std::vector<float_type>& hessians) {
+                              float_type lambda_l2_reg,
+                              uint32_t bin_count,
+                              const bin_id* feature_vector,
+                              const std::vector<float_type>& gradients,
+                              const std::vector<float_type>& hessians) {
     if(row_indices_.empty()) {
         return;
     }
@@ -102,7 +102,7 @@ void Leaf::CopyHistogram(uint32_t feature_number, const Leaf& parent) {
     histograms_[feature_number] = parent.histograms_[feature_number];
 }
 
-Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
+Leaf Leaf::MakeChild(bool is_left, const bin_id* feature_vector,
                      bin_id bin_number, float_type weight) const {
     std::vector<uint32_t> child_rows(0);
     for(uint32_t index : row_indices_) {

@@ -172,7 +172,7 @@ std::vector<uint32_t> Tree::SampleRows(uint32_t n_rows) const {
     return row_indexes;
 }
 
-std::vector<Leaf> Tree::MakeNewLeafs(std::vector<bin_id> feature_vector,
+std::vector<Leaf> Tree::MakeNewLeafs(const bin_id* feature_vector,
                                      const std::vector<Leaf>& leafs,
                                      const SearchParameters& best_params) {
     Leaf left, right;
@@ -198,13 +198,16 @@ void Tree::FindSplit(const TrainDataset& dataset,
                      const std::vector<Leaf>* parent_leafs,
                      std::vector<Leaf>* leafs,
                      std::vector<SearchParameters>* split_params) const {
-    const std::vector<bin_id>& feature_vector =
+    const bin_id* feature_vector =
         dataset.GetFeatureVector(feature_number);
     uint32_t bin_count = dataset.GetBinCount(feature_number);
     SearchParameters search_parameters;
     search_parameters.left_weigths = std::vector<float_type>(leafs->size(), 0);
     search_parameters.right_weights= std::vector<float_type>(leafs->size(), 0);
-    uint32_t base = uint32_t(pow(2, depth - 1));
+    uint32_t base = 0;
+    if (depth > 0) {
+        base = uint32_t(pow(2, depth - 1));
+    }
 
     if(!parent_leafs) {
         for(Leaf& leaf : *leafs) {

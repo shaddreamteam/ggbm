@@ -14,7 +14,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
               uint64_t total_cnt);
 
 
-std::vector<std::vector<bin_id>>
+bin_id*
 FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& feature_values) {
     std::vector<std::vector<bin_id>> transform_result;
     bin_upper_bounds_.resize(feature_values.size());
@@ -47,21 +47,22 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
     return Transform(feature_values);
 }
 
-std::vector<std::vector<bin_id>>
+bin_id*
 FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& feature_values) const{
     if (!initialized_) {
         throw std::runtime_error("Not initialized");
     }
-    std::vector<std::vector<bin_id>> transform_res;
-    transform_res.resize(feature_values.size());
+    bin_id* transform_res;
+    transform_res = (bin_id *) calloc(feature_values.size() * feature_values[0].size(),
+                                      sizeof(bin_id));
 
-    auto transform_vector = [&feature_values, &transform_res, this](int32_t j) {
-        transform_res[j].reserve(feature_values[j].size());
-        for (auto value: feature_values[j]) {
+    auto transform_vector = [&feature_values, transform_res, this](int32_t j) {
+        uint32_t offset = j * feature_values[0].size();
+        for (int i = 0; i < feature_values[0].size(); ++i) {
             bin_id bin = std::upper_bound(this->bin_upper_bounds_[j].begin(),
                                           this->bin_upper_bounds_[j].end(),
-                                          value) - this->bin_upper_bounds_[j].begin();
-            transform_res[j].push_back(bin);
+                                          feature_values[j][i]) - this->bin_upper_bounds_[j].begin();
+            transform_res[offset + i] = bin;
         }
     };
 

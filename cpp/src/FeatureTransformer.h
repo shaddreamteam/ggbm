@@ -12,10 +12,10 @@ public:
     FeatureTransformer(const Config& config) : initialized_(false),
                                                config_(config) {};
 
-    std::vector<std::vector<bin_id>>
+    bin_id*
     FitTransform(const std::vector<std::vector<float_type>>& feature_values);
 
-    std::vector<std::vector<bin_id>>
+    bin_id*
     Transform(const std::vector<std::vector<float_type>>& feature_values) const;
     
     uint32_t GetBinCount(uint32_t feature_number) const;
