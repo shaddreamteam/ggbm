@@ -5,15 +5,22 @@
 #include "Base.h"
 #include "Dataset.h"
 
+struct ThreadParameters{
+    ThreadParameters(uint32_t index_interval_start,
+                     uint32_t index_interval_end) :
+            index_interval_start(index_interval_start),
+            index_interval_end(index_interval_end) {}
+    uint32_t index_interval_start;
+    uint32_t index_interval_end;
+};
+
 class Loss {
 public:
-    virtual std::vector<float_type> GetGradients(
+    virtual void UpdateGradientsAndHessians(
             const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const = 0;
-
-    virtual std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const = 0;
+            const std::vector<float_type>& predictions,
+            std::vector<float_type>* gradients,
+            std::vector<float_type>* hessians) = 0;
 
     virtual float_type GetFirstPrediction(
             const TrainDataset& dataset) const = 0;
@@ -30,39 +37,39 @@ protected:
 
 class MSE : public Loss {
 public:
-    MSE() {};
-    std::vector<float_type> GetGradients(
+    MSE(const Config& config) : config_(config) {};
+    void UpdateGradientsAndHessians(
             const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
-
-    std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+            const std::vector<float_type>& predictions,
+            std::vector<float_type>* gradients,
+            std::vector<float_type>* hessians);
 
     float_type GetFirstPrediction(const TrainDataset& dataset) const;
 
     float_type GetLoss(
             const TrainDataset& dataset,
             const std::vector<float_type>& predictions) const;
+private:
+    const Config& config_;
 };
 
 float_type Sigmoid(float_type logit);
 
 class LogLoss : public Loss {
 public:
-    LogLoss() {};
-    std::vector<float_type> GetGradients(
+    LogLoss(const Config& config) : config_(config) {};
+    void UpdateGradientsAndHessians(
             const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
-
-    std::vector<float_type> GetHessians(
-            const TrainDataset& dataset,
-            const std::vector<float_type>& predictions) const;
+            const std::vector<float_type>& predictions,
+            std::vector<float_type>* gradients,
+            std::vector<float_type>* hessians);
 
     float_type GetFirstPrediction(const TrainDataset& dataset) const;
 
     float_type GetLoss(
             const TrainDataset& dataset,
             const std::vector<float_type>& predictions) const;
+private:
+    const Config& config_;
 };
 #endif //LOSS_H

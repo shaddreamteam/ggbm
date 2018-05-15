@@ -33,7 +33,8 @@ public:
 
     void Construct(const TrainDataset& dataset,
                    const std::vector<float_type>& gradients,
-                   const std::vector<float_type>& hessians);
+                   const std::vector<float_type>& hessians,
+                   std::vector<float_type>* current_predictions);
 
     std::vector<float_type> PredictFromDataset(const Dataset& dataset) const;
 

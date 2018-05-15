@@ -1,6 +1,7 @@
 #include <cmath>
 #include <exception>
 #include "Loss.h"
+#include "TaskQueue.h"
 
 void Loss::check_correct_input(
         const TrainDataset& dataset,
@@ -13,25 +14,41 @@ void Loss::check_correct_input(
     }
 }
 
-std::vector<float_type> MSE::GetGradients(
+void MSE::UpdateGradientsAndHessians(
         const TrainDataset& dataset,
-        const std::vector<float_type>& predictions) const {
-    check_correct_input(dataset, predictions);
-    std::vector<float_type> gradients(dataset.GetRowCount());
-    for(uint32_t i = 0; i < dataset.GetRowCount(); ++i) {
-        gradients[i] = 2 * (predictions.at(i) - dataset.GetTarget(i)) /
-            dataset.GetRowCount();
-    }
-    return gradients;
-}
+        const std::vector<float_type>& predictions,
+        std::vector<float_type>* gradients,
+        std::vector<float_type>* hessians) {
 
-std::vector<float_type> MSE::GetHessians(
-        const TrainDataset& dataset,
-        const std::vector<float_type>& predictions) const {
     check_correct_input(dataset, predictions);
-    std::vector<float_type> hessians(dataset.GetRowCount(), 2.0 /
-            dataset.GetRowCount());
-    return hessians;
+    if (gradients->size() == 0) {
+        gradients->resize(predictions.size());
+        hessians->resize(predictions.size(), 2.0f / dataset.GetRowCount());
+    }
+
+    auto update_gradients = [&dataset, &predictions, gradients, hessians, this]
+            (ThreadParameters thread_params) {
+        auto size = dataset.GetRowCount();
+        for (uint32_t current_index = thread_params.index_interval_start;
+             current_index < thread_params.index_interval_end;
+             ++current_index) {
+            (*gradients)[current_index] = 2 * (predictions.at(current_index) -
+                        dataset.GetTarget(current_index)) / size;
+            }
+    };
+
+    TaskQueue<decltype(update_gradients), ThreadParameters>
+            hist_queue(config_.GetThreads(), &update_gradients);
+    uint32_t start = 0;
+    for (uint32_t part_number = 0; part_number < config_.GetThreads(); ++part_number) {
+        ThreadParameters thread_params(start,
+                                       dataset.GetRowCount() * (part_number + 1) /
+                                               config_.GetThreads());
+        hist_queue.Add(thread_params);
+        // end is not included
+        start = thread_params.index_interval_end;
+    }
+    hist_queue.Run();
 }
 
 float_type MeanTarget(const TrainDataset& dataset) {
@@ -62,28 +79,44 @@ float_type Sigmoid(float_type logit) {
     return 1 / (1 + std::exp(-logit));
 }
 
-std::vector<float_type> LogLoss::GetGradients(
+void LogLoss::UpdateGradientsAndHessians(
         const TrainDataset& dataset,
-        const std::vector<float_type>& predictions) const {
+        const std::vector<float_type>& predictions,
+        std::vector<float_type>* gradients,
+        std::vector<float_type>* hessians) {
     check_correct_input(dataset, predictions);
-    std::vector<float_type> gradients(dataset.GetRowCount());
-    for(uint32_t i = 0; i < dataset.GetRowCount(); ++i) {
-        gradients[i] = -(dataset.GetTarget(i) - Sigmoid(predictions[i])) /
-            dataset.GetRowCount();
-    }
-    return gradients;
-}
 
-std::vector<float_type> LogLoss::GetHessians(
-        const TrainDataset& dataset,
-        const std::vector<float_type>& predictions) const {
-    check_correct_input(dataset, predictions);
-    std::vector<float_type> hessians(dataset.GetRowCount());
-    for(uint32_t i = 0; i < dataset.GetRowCount(); ++i) {
-        float_type probability = Sigmoid(predictions[i]);
-        hessians[i] = probability * (1 - probability) / dataset.GetRowCount();
+    if (gradients->size() == 0) {
+        gradients->resize(predictions.size());
+        hessians->resize(predictions.size(), 2.0f / dataset.GetRowCount());
     }
-    return hessians;
+
+    auto update_gradients = [&dataset, &predictions, gradients, hessians, this]
+            (ThreadParameters thread_params) {
+        auto size = dataset.GetRowCount();
+        for (uint32_t current_index = thread_params.index_interval_start;
+             current_index < thread_params.index_interval_end;
+             ++current_index) {
+            (*gradients)[current_index] = -(dataset.GetTarget(current_index) -
+                    Sigmoid(predictions[current_index])) / size;
+            float_type probability = Sigmoid(predictions[current_index]);
+            (*hessians)[current_index] = probability * (1 - probability) / size;
+
+        }
+    };
+
+    TaskQueue<decltype(update_gradients), ThreadParameters>
+            hist_queue(config_.GetThreads(), &update_gradients);
+    uint32_t start = 0;
+    for (uint32_t part_number = 0; part_number < config_.GetThreads(); ++part_number) {
+        ThreadParameters thread_params(start,
+                                       dataset.GetRowCount() * (part_number + 1) /
+                                       config_.GetThreads());
+        hist_queue.Add(thread_params);
+        // end is not included
+        start = thread_params.index_interval_end;
+    }
+    hist_queue.Run();
 }
 
 float_type LogLoss::GetFirstPrediction(const TrainDataset& dataset) const{

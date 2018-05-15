@@ -13,9 +13,10 @@
 class OptData;
 void Tree::Construct(const TrainDataset& dataset,
                      const std::vector<float_type>& gradients,
-                     const std::vector<float_type>& hessians) {
-    std::vector<uint32_t> indexes  = SampleRows(dataset.GetRowCount());
-    std::vector<Leaf> leafs = {Leaf(0, 0, dataset.GetFeatureCount(), indexes)};
+                     const std::vector<float_type>& hessians,
+                     std::vector<float_type>* current_predictions) {
+    std::vector<uint32_t> indices  = SampleRows(dataset.GetRowCount());
+    std::vector<Leaf> leafs = {Leaf(0, 0, dataset.GetFeatureCount(), indices)};
     std::vector<Leaf> parents;
 
     uint8_t depth;
@@ -73,6 +74,21 @@ void Tree::Construct(const TrainDataset& dataset,
         weights_[leaf.GetIndex(depth_)] = leaf.GetWeight() * 
             config_.GetLearningRate();
     }
+
+    auto make_prediction = [&dataset, &leafs, current_predictions, this] (int32_t leaf_number) {
+        auto row_indices = leafs[leaf_number].GetRowIndices();
+        for (auto index: row_indices) {
+            (*current_predictions)[index] += weights_[leaf_number];
+        }
+    };
+
+    TaskQueue<decltype(make_prediction), int32_t>
+            prediction_queue(std::min(config_.GetThreads(), static_cast<uint32_t>(leafs.size())),
+                             &make_prediction);
+    for (int32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
+        prediction_queue.Add(leaf_number);
+    }
+    prediction_queue.Run();
 }
 
 

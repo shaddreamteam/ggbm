@@ -4,9 +4,9 @@
 void GGBM::Train(const TrainDataset& trainDataset) {
     Loss* loss;
     if (config_.GetObjective() == kMse) {
-        loss = new MSE();
+        loss = new MSE(config_);
     } else {
-        loss = new LogLoss();
+        loss = new LogLoss(config_);
     }
     base_prediction_ = loss->GetFirstPrediction(trainDataset);
     std::vector<float_type> predictions(trainDataset.GetRowCount(),
@@ -16,12 +16,14 @@ void GGBM::Train(const TrainDataset& trainDataset) {
     for(uint32_t tree_number = 0; tree_number < config_.GetNEstimators();
             ++tree_number) {
         Tree tree(config_);
-        tree.Construct(trainDataset, optDataset.GetGradients(), optDataset.GetHessians());
+        tree.Construct(trainDataset,
+                       optDataset.GetGradients(),
+                       optDataset.GetHessians(),
+                       &predictions);
 
         if(tree.IsInitialized()) {
             trees_.push_back(tree);
-            auto tree_predictions = tree.PredictFromDataset(trainDataset);
-            optDataset.Update(trainDataset, tree_predictions, *loss);
+            optDataset.Update(trainDataset, predictions, *loss);
             if (config_.GetVerbose()) {
                 std::cout << "Tree #" << tree_number <<
                           " constructed" << std::endl;

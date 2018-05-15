@@ -41,7 +41,7 @@ public:
     Leaf() {};
     Leaf(uint32_t leaf_index, float_type weight, uint32_t n_features,
          std::vector<uint32_t> row_indexes):
-        leaf_index_(leaf_index), weight_(weight), row_indexes_(row_indexes),
+        leaf_index_(leaf_index), weight_(weight), row_indices_(row_indexes),
         histograms_(n_features) {};
 
     void CalculateHistogram(uint32_t feature_number,
@@ -70,12 +70,14 @@ public:
 
     bool IsEmpty() const;
     float_type GetWeight() const;
-    uint32_t Size() const { return row_indexes_.size(); };
+    uint32_t Size() const { return row_indices_.size(); };
+
+    const std::vector<uint32_t>& GetRowIndices();
 
     uint32_t leaf_index_;
 private:
     float_type weight_;
-    std::vector<uint32_t> row_indexes_;
+    std::vector<uint32_t> row_indices_;
     std::vector<Histogram> histograms_;
 };
 #endif //CPP_LEAF_H

@@ -74,12 +74,12 @@ void Leaf::CalculateHistogram(uint32_t feature_number,
                              const std::vector<bin_id>& feature_vector,
                              const std::vector<float_type>& gradients,
                              const std::vector<float_type>& hessians) {
-    if(row_indexes_.empty()) {
+    if(row_indices_.empty()) {
         return;
     }
     std::vector<float_type> gradient_sum(bin_count, 0);
         std::vector<float_type> hessian_sum(bin_count, 0);
-    for(uint32_t index : row_indexes_) {
+    for(uint32_t index : row_indices_) {
         bin_id bin_number = feature_vector[index];
         gradient_sum[bin_number] += gradients[index];
         hessian_sum[bin_number] += hessians[index];
@@ -105,7 +105,7 @@ void Leaf::CopyHistogram(uint32_t feature_number, const Leaf& parent) {
 Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
                      bin_id bin_number, float_type weight) const {
     std::vector<uint32_t> child_rows(0);
-    for(uint32_t index : row_indexes_) {
+    for(uint32_t index : row_indices_) {
         bool belongs_left = feature_vector[index] <= bin_number;
         if(belongs_left && is_left || !belongs_left && !is_left) {
             child_rows.push_back(index);
@@ -140,7 +140,7 @@ uint32_t Leaf::ParentVectorIndex(uint32_t base) const {
     
 
 bool Leaf::IsEmpty() const {
-    return row_indexes_.empty();
+    return row_indices_.empty();
 }
 
 float_type Leaf::GetWeight() const {
@@ -150,7 +150,7 @@ float_type Leaf::GetWeight() const {
 
 float_type Leaf::CalculateSplitGain(uint32_t feature_number, 
                                     bin_id bin_number) const {
-    if(row_indexes_.empty()) {
+    if(row_indices_.empty()) {
         return 0;
     }
     return histograms_[feature_number].CalculateSplitGain(bin_number);
@@ -158,8 +158,12 @@ float_type Leaf::CalculateSplitGain(uint32_t feature_number,
 
 std::tuple<float_type, float_type> Leaf::CalculateSplitWeights(
             uint32_t feature_number, bin_id bin_number) const {
-    if(row_indexes_.empty()) {
+    if(row_indices_.empty()) {
         return std::make_tuple(0, 0);
     }
     return histograms_[feature_number].CalculateSplitWeights(bin_number);
+}
+
+const std::vector<uint32_t>& Leaf::GetRowIndices() {
+    return row_indices_;
 }
