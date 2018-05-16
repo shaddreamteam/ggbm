@@ -18,6 +18,6 @@ set(SOURCE_FILES main.cpp src/Leaf.cpp src/Leaf.h src/TaskQueue.h src/GGBM.cpp s
         src/Tree.cpp src/Tree.h src/Dataset.cpp src/Dataset.h src/Base.h src/FeatureTransformer.cpp
         src/FeatureTransformer.h src/Loss.h src/Loss.cpp src/OptData.h
         src/OptData.cpp src/InputParser.h src/InputParser.cpp src/Config.h src/ConfigValue.h
-        src/UtilityFlow.h)
+        src/UtilityFlow.h src/ConfigValue.cpp)
 add_executable(cpp ${SOURCE_FILES})
 target_link_libraries (cpp ${CMAKE_THREAD_LIBS_INIT})
