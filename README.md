@@ -54,9 +54,7 @@ Good game boosting machine
 ./cpp mode=predict threads=6 filename_train=./test_model/test.csv filename_model=./test_model/model.bst filename_output=./test_model/output.csv
 
 
-## Предварительные результаты:
-
-Пока не успели провести полные тесты ~~и еще кажется у нас сломалась параллельность :( (она работает, но ускоряет совсем не в n раз)~~ параллельность какая-никакая есть теперь, делаем тесты.
+## Результаты:
 
 Предварительные результаты параметров обучения на 1 потоке в сравнении с lightgbm и catboost на higgs с kaggle (250k objects) (0.7 train, 0.3 test)
 
@@ -74,19 +72,19 @@ lightgbm objective=binary data=./test_model/train.csv num_leaves=64 num_threads=
 
 ./catboost fit -f data/higgs/train.csv --loss-function Logloss --cd ../cpp/data/catboost_descriptor  --delimiter ',' --iterations 400 --thread-count 1 --depth 7 --l2-leaf-reg 0.5 --learning-rate 0.1
 
-Тесты на большом higgs (11М objects) в однопоточном режиме:
+Тесты на большом higgs в 4 потока (11М objects, 0.7 train, 0.3 test):
 
-| framework | Time (s) | Memory (kb) |
-| --------- | -------- | ----------- |
-| ggbm      | 615.60   | 1550332     |
-| lightgbm  | 454.17   | 8916488     |
-
-Тесты в 6 потоков:
-
-| framework | Time (s) |
-| --------- | -------- |
-| ggbm      | 210.19   |
-| lightgbm  | 121.79   |
+| framework      | depth | Time (s)    | Memory (kb) | Quality (logloss) |
+| -------------- | ----- | ----------- | ----------- | ----------------- |
+| ggbm           |   3   | 190.02      | **1103776** | 0.53555           |
+| lightgbm       |   3   | **84.91**   | 4561384     | **0.52068**       |
+| xgboost(hist)  |   3   | 177.30      | 3946152     | 0.52768           |
+| ggbm           |   6   | 356.76      | **1108420** | 0.52116           |
+| lightgbm       |   6   | **227.54**  | 4560888     | **0.50695**       |
+| xgboost(hist)  |   6   | 320.28      | 3963880     | 0.51559           |
+| ggbm           |   9   | 756.98      | **1102476** | 0.51810           |
+| lightgbm       |   9   | 632.53      | 4557716     | 0.49210           |
+| xgboost(hist)  |   9   | **438.34**  | 4046596     | **0.482425**      |
 
 
 Измерения:
