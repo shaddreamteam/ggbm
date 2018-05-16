@@ -5,15 +5,6 @@
 #include "Base.h"
 #include "Dataset.h"
 
-struct ThreadParameters{
-    ThreadParameters(uint32_t index_interval_start,
-                     uint32_t index_interval_end) :
-            index_interval_start(index_interval_start),
-            index_interval_end(index_interval_end) {}
-    uint32_t index_interval_start;
-    uint32_t index_interval_end;
-};
-
 class Loss {
 public:
     virtual void UpdateGradientsAndHessians(

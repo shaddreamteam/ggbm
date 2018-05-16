@@ -164,6 +164,6 @@ std::tuple<float_type, float_type> Leaf::CalculateSplitWeights(
     return histograms_[feature_number].CalculateSplitWeights(bin_number);
 }
 
-const std::vector<uint32_t>& Leaf::GetRowIndices() {
+const std::vector<uint32_t>& Leaf::GetRowIndices() const {
     return row_indices_;
 }

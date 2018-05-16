@@ -53,4 +53,20 @@ void TaskQueue<Task, Argument>::Run()  {
     }
 }
 
+struct ThreadParameters{
+    ThreadParameters(uint32_t index_interval_start,
+                     uint32_t index_interval_end) :
+            index_interval_start(index_interval_start),
+            index_interval_end(index_interval_end) {}
+    ThreadParameters(uint32_t index_interval_start,
+                     uint32_t index_interval_end,
+                     uint32_t thread_id) :
+            index_interval_start(index_interval_start),
+            index_interval_end(index_interval_end),
+            thread_id(thread_id) {}
+    uint32_t index_interval_start;
+    uint32_t index_interval_end;
+    uint32_t thread_id;
+};
+
 #endif //CPP_TASKQUEUE_H

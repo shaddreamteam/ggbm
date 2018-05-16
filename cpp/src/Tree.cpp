@@ -62,8 +62,8 @@ void Tree::Construct(const TrainDataset& dataset,
         split_params.clear();
         splits_.emplace_back(best_feature, best_params.bin);
         parents.swap(leafs);
-        leafs = MakeNewLeafs(dataset.GetFeatureVector(best_feature),
-                             parents, best_params);
+        leafs.clear();
+        MakeNewLeafs(dataset.GetFeatureVector(best_feature), parents, best_params, leafs);
     }
     
     depth_ = depth;
@@ -71,24 +71,19 @@ void Tree::Construct(const TrainDataset& dataset,
     initialized_ = true;
 
     for(const auto& leaf: leafs) {
+        auto index = leaf.GetIndex(depth_);
+        if (index >= weights_.size()) {
+            throw std::runtime_error("test");
+        }
         weights_[leaf.GetIndex(depth_)] = leaf.GetWeight() * 
             config_.GetLearningRate();
     }
 
-    auto make_prediction = [&dataset, &leafs, current_predictions, this] (int32_t leaf_number) {
-        auto row_indices = leafs[leaf_number].GetRowIndices();
-        for (auto index: row_indices) {
-            (*current_predictions)[index] += weights_[leaf_number];
+    for (int i = 0; i < leafs.size(); ++i) {
+        for (auto row_index: leafs[i].GetRowIndices()) {
+            (*current_predictions)[row_index] += weights_[i];
         }
-    };
-
-    TaskQueue<decltype(make_prediction), int32_t>
-            prediction_queue(std::min(config_.GetThreads(), static_cast<uint32_t>(leafs.size())),
-                             &make_prediction);
-    for (int32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
-        prediction_queue.Add(leaf_number);
     }
-    prediction_queue.Run();
 }
 
 
@@ -153,10 +148,10 @@ void Tree::Load(std::ifstream& stream) {
 }
 
 std::vector<uint32_t> Tree::SampleRows(uint32_t n_rows) const {
-    std::vector<uint32_t> row_indexes;
+    std::vector<uint32_t> row_indices;
     if(config_.GetRowSampling() >= 1 - EPS) {
-        row_indexes = std::vector<uint32_t>(n_rows);
-        std::iota(row_indexes.begin(), row_indexes.end(), 0);
+        row_indices = std::vector<uint32_t>(n_rows);
+        std::iota(row_indices.begin(), row_indices.end(), 0);
     } else {
         float_type sampling_coef = std::max(config_.GetRowSampling(),
                 float(config_.GetMinSubsample()) / n_rows);
@@ -165,29 +160,111 @@ std::vector<uint32_t> Tree::SampleRows(uint32_t n_rows) const {
         std::uniform_real_distribution<double> distribution(0.0,1.0);
         for(uint32_t i = 0; i < n_rows; ++i) {
             if(distribution(generator) < sampling_coef) {
-                row_indexes.push_back(i);
+                row_indices.push_back(i);
             }
         }
     }
-    return row_indexes;
+    return row_indices;
 }
 
-std::vector<Leaf> Tree::MakeNewLeafs(std::vector<bin_id> feature_vector,
-                                     const std::vector<Leaf>& leafs,
-                                     const SearchParameters& best_params) {
-    Leaf left, right;
-    std::vector<Leaf> new_leafs;
-    for(uint32_t leaf_number = 0; leaf_number < leafs.size(); ++leaf_number) {
-        const Leaf& leaf = leafs[leaf_number];
-        float_type child_weight = best_params.left_weigths[leaf_number];
-        new_leafs.push_back(leaf.MakeChild(
-            true, feature_vector, best_params.bin, child_weight));
-
-        child_weight = best_params.right_weights[leaf_number];
-        new_leafs.push_back(leaf.MakeChild(
-            false, feature_vector, best_params.bin, child_weight));
+void Tree::MakeNewLeafs(const std::vector<bin_id>& feature_vector,
+                        const std::vector<Leaf>& leafs,
+                        const SearchParameters& best_params,
+                        std::vector<Leaf>& new_leafs) {
+    uint32_t new_leafs_size = leafs.size() * 2;
+    new_leafs.resize(new_leafs_size);
+    std::vector<uint32_t> indices_count(leafs.size());
+    for (uint32_t leaf_index = 0; leaf_index < leafs.size(); ++leaf_index) {
+        indices_count[leaf_index] = leafs[leaf_index].Size();
     }
-    return new_leafs;
+
+    std::partial_sum(indices_count.begin(), indices_count.end(), indices_count.begin());
+
+    std::vector<std::vector<std::vector<uint32_t>>> thread_leaf_indices(config_.GetThreads(),
+                                               std::vector<std::vector<uint32_t>>(new_leafs_size));
+
+    auto make_leafs = [&feature_vector, &leafs, &thread_leaf_indices,
+            &indices_count, &best_params, this]
+            (ThreadParameters thread_params) {
+        uint32_t current_leaf = std::lower_bound(indices_count.begin(),
+                                                 indices_count.end(),
+                                                 thread_params.index_interval_start + 1) -
+                                indices_count.begin();
+        uint32_t previous_count = current_leaf == 0 ? 0 : indices_count[current_leaf - 1];
+        uint32_t current_index = thread_params.index_interval_start - previous_count;
+        uint32_t records_processed = 0;
+        uint32_t records_to_process = thread_params.index_interval_end -
+                thread_params.index_interval_start;
+        std::vector<std::vector<uint32_t>>& thread_leaf_rows =
+                thread_leaf_indices[thread_params.thread_id];
+
+        while (records_processed < records_to_process && current_leaf < leafs.size()) {
+            uint32_t current_leaf_size = leafs[current_leaf].Size();
+            auto row_indices = leafs[current_leaf].GetRowIndices();
+            while (current_index < current_leaf_size && records_processed < records_to_process) {
+                uint32_t row_index = row_indices[current_index];
+                if (feature_vector[row_index] <= best_params.bin) {
+                    // left
+                    thread_leaf_rows[current_leaf * 2].push_back(row_index);
+                } else {
+                    thread_leaf_rows[current_leaf * 2 + 1].push_back(row_index);
+                }
+                ++records_processed;
+                ++current_index;
+            }
+            current_index = 0;
+            ++current_leaf;
+        }
+    };
+
+    TaskQueue<decltype(make_leafs), ThreadParameters>
+            leafs_queue(config_.GetThreads(), &make_leafs);
+    uint32_t start = 0;
+    for (uint32_t part_number = 1; part_number <= config_.GetThreads(); ++part_number) {
+        ThreadParameters thread_params(start,
+                                       feature_vector.size() * part_number / config_.GetThreads(),
+                                       part_number - 1);
+        leafs_queue.Add(thread_params);
+        // end is not included
+        start = thread_params.index_interval_end;
+    }
+    leafs_queue.Run();
+
+    auto fill_leafs = [&new_leafs, &leafs, &thread_leaf_indices,
+            &indices_count, &best_params, this]
+            (uint32_t leaf_number) {
+        uint32_t size = 0;
+        for (uint32_t i = 0; i < thread_leaf_indices.size(); ++i) {
+            size += thread_leaf_indices[i][leaf_number].size();
+        }
+        new_leafs[leaf_number].row_indices_.reserve(size);
+        for (uint32_t i = 0; i < thread_leaf_indices.size(); ++i) {
+            for (uint32_t j = 0; j < thread_leaf_indices[i][leaf_number].size(); ++j) {
+                new_leafs[leaf_number].row_indices_.push_back(
+                        thread_leaf_indices[i][leaf_number][j]);
+            }
+        }
+
+        uint32_t is_right = leaf_number % 2;
+        new_leafs[leaf_number].leaf_index_ = leafs[leaf_number / 2].leaf_index_ * 2 + 1 + is_right;
+        if (new_leafs[leaf_number].IsEmpty()) {
+            new_leafs[leaf_number].weight_ = leafs[leaf_number / 2].weight_;
+        } else {
+            if (is_right) {
+                new_leafs[leaf_number].weight_ = best_params.right_weights[leaf_number / 2];
+            } else {
+                new_leafs[leaf_number].weight_ = best_params.left_weigths[leaf_number / 2];
+            }
+            new_leafs[leaf_number].histograms_.resize(leafs[leaf_number / 2].histograms_.size());
+        }
+    };
+
+    TaskQueue<decltype(fill_leafs), uint32_t>
+            fill_queue(std::min(config_.GetThreads(), new_leafs_size), &fill_leafs);
+    for(uint32_t leaf_number = 0; leaf_number < new_leafs_size; ++leaf_number) {
+        fill_queue.Add(leaf_number);
+    }
+    fill_queue.Run();
 }
 
 void Tree::FindSplit(const TrainDataset& dataset,

@@ -38,6 +38,8 @@ private:
 
 class Leaf {
 public:
+    friend class Tree;
+
     Leaf() {};
     Leaf(uint32_t leaf_index, float_type weight, uint32_t n_features,
          std::vector<uint32_t> row_indexes):
@@ -72,7 +74,7 @@ public:
     float_type GetWeight() const;
     uint32_t Size() const { return row_indices_.size(); };
 
-    const std::vector<uint32_t>& GetRowIndices();
+    const std::vector<uint32_t>& GetRowIndices() const;
 
     uint32_t leaf_index_;
 private:

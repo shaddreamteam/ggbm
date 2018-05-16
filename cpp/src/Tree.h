@@ -51,9 +51,12 @@ private:
     std::vector<float_type> weights_;
 
     std::vector<uint32_t> SampleRows(uint32_t n_rows) const;
-    std::vector<Leaf> MakeNewLeafs(std::vector<bin_id> feature_vector,
-                                   const std::vector<Leaf>& leafs,
-                                   const SearchParameters& best_params);
+
+    void MakeNewLeafs(const std::vector<bin_id>& feature_vector,
+                      const std::vector<Leaf>& leafs,
+                      const SearchParameters& best_params,
+                      std::vector<Leaf>& new_leafs);
+
     void FindSplit(const TrainDataset& dataset,
                    const std::vector<float_type>& gradients,
                    const std::vector<float_type>& hessians,
