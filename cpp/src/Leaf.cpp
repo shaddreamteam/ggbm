@@ -102,33 +102,6 @@ void Leaf::CopyHistogram(uint32_t feature_number, const Leaf& parent) {
     histograms_[feature_number] = parent.histograms_[feature_number];
 }
 
-Leaf Leaf::MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
-                     bin_id bin_number, float_type weight) const {
-    std::vector<uint32_t> child_rows(0);
-    for(uint32_t index : row_indices_) {
-        bool belongs_left = feature_vector[index] <= bin_number;
-        if(belongs_left && is_left || !belongs_left && !is_left) {
-            child_rows.push_back(index);
-        }
-    }
-
-    uint32_t child_hist_size = histograms_.size();
-    if(child_rows.empty()) {
-        weight = weight_;
-        child_hist_size = 0;
-    }
-
-    uint32_t child_index;
-    if(is_left) {
-        child_index = leaf_index_ * 2 + 1;
-    } else {
-        child_index = leaf_index_ * 2 + 2;
-    }
-
-    Leaf child(child_index, weight, child_hist_size, child_rows);
-    return child;
-}
-
 uint32_t Leaf::GetIndex(uint32_t depth) const {
     return (leaf_index_ + 1)  - uint32_t(pow(2, depth));
 }

@@ -63,9 +63,6 @@ public:
 
     std::tuple<float_type, float_type> CalculateSplitWeights(
             uint32_t feature_number, bin_id bin_number) const;
-
-    Leaf MakeChild(bool is_left, const std::vector<bin_id>& feature_vector,
-                   bin_id bin_number,  float_type left_weight) const;
  
     uint32_t GetIndex(uint32_t depth) const;
     uint32_t ParentVectorIndex(uint32_t base) const;

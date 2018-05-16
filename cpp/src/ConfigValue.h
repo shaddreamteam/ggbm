@@ -61,9 +61,9 @@ private:
         }
     };
     bool StringToBool(const std::string& s) {
-        if(s == "true") {
+        if(s == "1") {
             return true;
-        } else if(s == "false") {
+        } else if(s == "0") {
             return false;
         } else {
              throw std::invalid_argument("Ivalid argument for file_has_target");

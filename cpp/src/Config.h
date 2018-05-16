@@ -71,8 +71,8 @@ private:
         {"lambda", ConfigValue("1", kFloatType)},
         {"row_subsampling", ConfigValue("1", kFloatType)},
         {"min_subsample", ConfigValue("1", kUint32_t)},
-        {"file_has_target", ConfigValue("false", kBool)},
-        {"verbose", ConfigValue("false", kBool)},
+        {"file_has_target", ConfigValue("0", kBool)},
+        {"verbose", ConfigValue("0", kBool)},
     };
 };
 

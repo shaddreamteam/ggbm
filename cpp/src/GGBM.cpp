@@ -1,12 +1,11 @@
 #include "GGBM.h"
 
-
 void GGBM::Train(const TrainDataset& trainDataset) {
-    Loss* loss;
+    std::unique_ptr<Loss> loss;
     if (config_.GetObjective() == kMse) {
-        loss = new MSE(config_);
+        loss = std::make_unique<MSE>(config_);
     } else {
-        loss = new LogLoss(config_);
+        loss = std::make_unique<LogLoss>(config_);
     }
     base_prediction_ = loss->GetFirstPrediction(trainDataset);
     std::vector<float_type> predictions(trainDataset.GetRowCount(),
@@ -25,13 +24,11 @@ void GGBM::Train(const TrainDataset& trainDataset) {
             trees_.push_back(tree);
             optDataset.Update(trainDataset, predictions, *loss);
             if (config_.GetVerbose()) {
-                std::cout << "Tree #" << tree_number <<
-                          " constructed" << std::endl;
+                std::cout << "Tree #" << tree_number << " constructed. Loss = " <<
+                          loss->GetLoss(trainDataset, predictions)<< std::endl;
             }
         }
     }
-
-    delete loss;
 }
 
 std::vector<float_type> GGBM::PredictFromDataset(const Dataset& dataset) const {
