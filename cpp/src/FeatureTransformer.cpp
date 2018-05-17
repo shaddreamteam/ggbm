@@ -19,7 +19,7 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
     std::vector<std::vector<bin_id>> transform_result;
     bin_upper_bounds_.resize(feature_values.size());
 
-    auto find_bin_vector = [&feature_values, this](int32_t j) {
+    auto find_bin_vector = [&feature_values, this](uint32_t j) {
         auto feature_vector = feature_values[j]; // copy to sort
         std::sort(feature_vector.begin(), feature_vector.end());
         std::vector<float_type> distinct_values = {feature_vector[0]};
@@ -36,9 +36,9 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
         this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
     };
 
-    TaskQueue<decltype(find_bin_vector), int32_t> task_queue(config_.GetThreads(),
+    TaskQueue<decltype(find_bin_vector), uint32_t> task_queue(config_.GetThreads(),
                                                              &find_bin_vector);
-    for (int32_t j = 0; j < feature_values.size(); ++j) {
+    for (uint32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
     task_queue.Run();
@@ -67,7 +67,7 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
 
     TaskQueue<decltype(transform_vector), int32_t> task_queue(config_.GetThreads(),
                                                               &transform_vector);
-    for (int32_t j = 0; j < feature_values.size(); ++j) {
+    for (uint32_t j = 0; j < feature_values.size(); ++j) {
         task_queue.Add(j);
     }
     task_queue.Run();
@@ -83,7 +83,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
     auto num_distinct_values = distinct_values.size();
 
     if (num_distinct_values <= kMaxBin) {
-        for (int i = 0; i < num_distinct_values - 1; ++i) {
+        for (uint32_t i = 0; i < num_distinct_values - 1; ++i) {
             bin_upper_bound.push_back(std::nextafter(
                     (distinct_values[i] + distinct_values[i + 1]) / 2.0, INFINITY));
         }
@@ -95,7 +95,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
         uint64_t rest_bin_cnt = kMaxBin;
         uint64_t rest_sample_cnt = static_cast<int>(total_cnt);
         std::vector<bool> is_big_count_value(num_distinct_values, false);
-        for (int i = 0; i < num_distinct_values; ++i) {
+        for (uint32_t i = 0; i < num_distinct_values; ++i) {
             if (counts[i] >= mean_bin_size) {
                 is_big_count_value[i] = true;
                 --rest_bin_cnt;
@@ -110,7 +110,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
         uint32_t bin_cnt = 0;
         lower_bounds[bin_cnt] = distinct_values[0];
         uint32_t cur_cnt_inbin = 0;
-        for (int i = 0; i < num_distinct_values - 1; ++i) {
+        for (uint32_t i = 0; i < num_distinct_values - 1; ++i) {
             if (!is_big_count_value[i]) {
                 rest_sample_cnt -= counts[i];
             }
@@ -135,7 +135,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
         ++bin_cnt;
         // update bin upper bound
         bin_upper_bound.clear();
-        for (int i = 0; i < bin_cnt - 1; ++i) {
+        for (uint32_t i = 0; i < bin_cnt - 1; ++i) {
             auto val = std::nextafter((upper_bounds[i] + lower_bounds[i + 1]) / 2.0, INFINITY);
             if (bin_upper_bound.empty() ||
                     val >= std::nextafter(bin_upper_bound.back(), INFINITY)) {
@@ -167,11 +167,11 @@ void FeatureTransformer::Load(std::ifstream& stream) {
     uint32_t features_count;
     stream >> features_count;
     bin_upper_bounds_.resize(features_count);
-    for (int32_t feature_number = 0; feature_number < features_count; ++feature_number) {
+    for (uint32_t feature_number = 0; feature_number < features_count; ++feature_number) {
         uint32_t bin_count;
         stream >> bin_count;
         bin_upper_bounds_[feature_number].resize(bin_count);
-        for (int32_t bin_number = 0; bin_number < bin_count; ++bin_number) {
+        for (uint32_t bin_number = 0; bin_number < bin_count; ++bin_number) {
             float_type upper_bound;
             stream >> upper_bound;
             bin_upper_bounds_[feature_number][bin_number] = upper_bound;

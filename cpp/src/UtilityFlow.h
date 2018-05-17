@@ -51,7 +51,7 @@ private:
         auto preds = ggbm->PredictFromDataset(test);
 
         std::ofstream stream(cfg.GetOutputFilename());
-        for(int i = 0; i < preds.size() - 1; ++i) {
+        for(uint32_t i = 0; i < preds.size() - 1; ++i) {
             stream << preds[i] << '\n';
         }
         stream << preds[preds.size() - 1];

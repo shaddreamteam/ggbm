@@ -32,7 +32,7 @@ void TaskQueue<Task, Argument>::Add(Argument argument)  {
 template <class Task, class Argument>
 void TaskQueue<Task, Argument>::Run()  {
     std::vector<std::thread> threads;
-    for (int32_t i = 0; i < thread_count_; ++i) {
+    for (uint32_t i = 0; i < thread_count_; ++i) {
         threads.emplace_back([this] {
             while(true) {
                 mutex_.lock();
@@ -48,7 +48,7 @@ void TaskQueue<Task, Argument>::Run()  {
         });
     }
 
-    for (int32_t i = 0; i < thread_count_; ++i) {
+    for (uint32_t i = 0; i < thread_count_; ++i) {
         threads[i].join();
     }
 }

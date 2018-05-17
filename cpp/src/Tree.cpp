@@ -34,7 +34,7 @@ void Tree::Construct(const TrainDataset& dataset,
         };
         TaskQueue<decltype(find_split), int32_t> 
             task_queue(config_.GetThreads(), &find_split);
-        for (int32_t feature_number = 0;
+        for (uint32_t feature_number = 0;
              feature_number < dataset.GetFeatureCount();
              ++feature_number) {
             task_queue.Add(feature_number);
@@ -79,7 +79,7 @@ void Tree::Construct(const TrainDataset& dataset,
             config_.GetLearningRate();
     }
 
-    for (int i = 0; i < leafs.size(); ++i) {
+    for (uint32_t i = 0; i < leafs.size(); ++i) {
         for (auto row_index: leafs[i].GetRowIndices()) {
             (*current_predictions)[row_index] += weights_[i];
         }
@@ -130,8 +130,8 @@ void Tree::Load(std::ifstream& stream) {
     uint32_t split_count;
     stream >> split_count;
     splits_.resize(split_count);
-    for (int32_t split_number = 0; split_number < split_count; ++split_number) {
-        int32_t bin;
+    for (uint32_t split_number = 0; split_number < split_count; ++split_number) {
+        uint32_t bin;
         stream >> splits_[split_number].feature >> bin;
         splits_[split_number].bin = static_cast<bin_id>(bin);
     }
@@ -140,7 +140,7 @@ void Tree::Load(std::ifstream& stream) {
     uint32_t weight_count;
     stream >> weight_count;
     weights_.resize(weight_count);
-    for (int32_t weight_number = 0; weight_number < weight_count; ++weight_number) {
+    for (uint32_t weight_number = 0; weight_number < weight_count; ++weight_number) {
         stream >> weights_[weight_number];
     }
 
