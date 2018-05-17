@@ -11,7 +11,8 @@
 std::vector<float_type>
 GreedyFindBin(const std::vector<float_type>& distinct_values,
               const std::vector<uint32_t>& counts,
-              uint64_t total_cnt);
+              uint64_t total_cnt,
+              uint32_t max_bin);
 
 
 std::vector<std::vector<bin_id>>
@@ -33,7 +34,8 @@ FeatureTransformer::FitTransform(const std::vector<std::vector<float_type>>& fea
             }
         }
         uint64_t row_count = feature_vector.size();
-        this->bin_upper_bounds_[j] = GreedyFindBin(distinct_values, counts, row_count);
+        this->bin_upper_bounds_[j] = GreedyFindBin(
+                distinct_values, counts, row_count, config_.GetMaxBin());
     };
 
     TaskQueue<decltype(find_bin_vector), uint32_t> task_queue(config_.GetThreads(),
@@ -78,21 +80,22 @@ FeatureTransformer::Transform(const std::vector<std::vector<float_type>>& featur
 std::vector<float_type>
 GreedyFindBin(const std::vector<float_type>& distinct_values,
                                   const std::vector<uint32_t>& counts,
-                                  uint64_t total_cnt) {
+                                  uint64_t total_cnt,
+                                  uint32_t max_bin) {
     std::vector<float_type> bin_upper_bound;
     auto num_distinct_values = distinct_values.size();
 
-    if (num_distinct_values <= kMaxBin) {
+    if (num_distinct_values <= max_bin) {
         for (uint32_t i = 0; i < num_distinct_values - 1; ++i) {
             bin_upper_bound.push_back(std::nextafter(
                     (distinct_values[i] + distinct_values[i + 1]) / 2.0, INFINITY));
         }
         bin_upper_bound.push_back(std::numeric_limits<float_type>::max());
     } else {
-        double mean_bin_size = static_cast<double>(total_cnt) / kMaxBin;
+        double mean_bin_size = static_cast<double>(total_cnt) / max_bin;
 
         // mean size for one bin
-        uint64_t rest_bin_cnt = kMaxBin;
+        uint64_t rest_bin_cnt = max_bin;
         uint64_t rest_sample_cnt = static_cast<int>(total_cnt);
         std::vector<bool> is_big_count_value(num_distinct_values, false);
         for (uint32_t i = 0; i < num_distinct_values; ++i) {
@@ -104,8 +107,8 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
         }
 
         mean_bin_size = static_cast<double>(rest_sample_cnt) / rest_bin_cnt;
-        std::vector<float_type> upper_bounds(kMaxBin, std::numeric_limits<float_type>::max());
-        std::vector<float_type> lower_bounds(kMaxBin, std::numeric_limits<float_type>::max());
+        std::vector<float_type> upper_bounds(max_bin, std::numeric_limits<float_type>::max());
+        std::vector<float_type> lower_bounds(max_bin, std::numeric_limits<float_type>::max());
 
         uint32_t bin_cnt = 0;
         lower_bounds[bin_cnt] = distinct_values[0];
@@ -122,7 +125,7 @@ GreedyFindBin(const std::vector<float_type>& distinct_values,
                 upper_bounds[bin_cnt] = distinct_values[i];
                 ++bin_cnt;
                 lower_bounds[bin_cnt] = distinct_values[i + 1];
-                if (bin_cnt >= kMaxBin - 1) {
+                if (bin_cnt >= max_bin - 1) {
                     break;
                 }
                 cur_cnt_inbin = 0;

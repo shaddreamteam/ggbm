@@ -56,6 +56,9 @@ public:
     const bool GetVerbose() const {
         return params_.at("verbose");
     }
+    const uint32_t GetMaxBin() const {
+        return params_.at("max_bin");
+    }
 private:
     std::unordered_map<std::string, ConfigValue> params_={
         {"mode", ConfigValue("", kString)},
@@ -73,6 +76,7 @@ private:
         {"min_subsample", ConfigValue("1", kUint32_t)},
         {"file_has_target", ConfigValue("0", kBool)},
         {"verbose", ConfigValue("0", kBool)},
+        {"max_bin", ConfigValue("255", kUint32_t)},
     };
 };
 

@@ -149,7 +149,7 @@ void Tree::Load(std::ifstream& stream) {
 
 std::vector<uint32_t> Tree::SampleRows(uint32_t n_rows) const {
     std::vector<uint32_t> row_indices;
-    if(config_.GetRowSampling() >= 1 - EPS) {
+    if(config_.GetRowSampling() >= 1 - 1e-3) {
         row_indices = std::vector<uint32_t>(n_rows);
         std::iota(row_indices.begin(), row_indices.end(), 0);
     } else {
